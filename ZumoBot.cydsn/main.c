@@ -47,6 +47,10 @@
 #include <sys/time.h>
 #include "serial1.h"
 #include <unistd.h>
+#include <stdlib.h>
+
+void satunnais_kaannos();
+
 /**
  * @file    main.c
  * @brief   
@@ -361,35 +365,43 @@ void zmain(void)
         motor_start();
         //Ultra_Start();
         LSM303D_Start();
+        TickType_t time;
+        time = xTaskGetTickCount();
+        TickType_t runningtime;
+        
+        int count = 0;
+        int data_average_x = 0;
+        int data_average_y = 0;
+        int keskiarvo = 0;
         
         while(true){
             
-            motor_forward(100, 1000);
+            motor_forward(100, 100);
             LSM303D_Read_Acc(&data);
-            int random_n = rand() % 2;
-            printf("X : %10d Y : %10d Z : %10d\n", data.accX, data.accY, data.accZ);
-            //printf("%d ", random_n);
-            vTaskDelay(100);
-
+            time = xTaskGetTickCount();
+            runningtime= time % 3000;
             
-            if(data.accX <= -1200 || data.accY >= 500){
-                motor_forward(0, 0);
-                vTaskDelay(1000);
-                motor_backward(100, 2000);
-            }else{
-                switch(random_n){
-                
-                    case 0:
-                    motor_turn(0, 90, 1000);
-                    break;
-                
-                    case 1:
-                    motor_turn(90, 0, 1000);
-                    break;
-                
-                    default:
-                    printf("Nyt meni päin helvettiä!\n");
+            data_average_x += data.accX;
+            data_average_y += data.accY;
+            
+            count++;
+            
+            printf("X : %10d Y : %10d Z : %10d\n", data.accX, data.accY, data.accZ);
+            printf("X kesiarvo on: %d\n", (data_average_x / count));
+            //printf("Y kesiarvo on: %d\n", (data_average_y / count));
+            //printf("%d ", random_n);
+            vTaskDelay(1);
+            if(runningtime == 0){
+                satunnais_kaannos();
             }
+
+            keskiarvo = data_average_x / count;
+            
+            if((keskiarvo - data.accX) <  -2000){
+                motor_forward(0, 0);
+                vTaskDelay(100);
+                motor_backward(100, 2000);
+                satunnais_kaannos();
             }
 
         }
@@ -402,10 +414,32 @@ void zmain(void)
         break;
         }
     }
-    
 
-}   
+}
+
+void satunnais_kaannos(){
+    
+                int random_n = rand() % 2;
+                
+                switch(random_n){
+
+                    case 0:
+                    motor_turn(0, 90, 1000);
+                    break;
+
+                    case 1:
+                    motor_turn(90, 0, 1000);
+                    break;
+
+                    default:
+                    printf("Nyt meni päin helvettiä!\n");
+                }
+}
+
+
 #endif
+
+
 
 
 
