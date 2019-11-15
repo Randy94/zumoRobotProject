@@ -53,12 +53,93 @@
  * @details  ** Enable global interrupt since Zumo library uses interrupts. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
 
-#if 1
+
+#if 0
 // Hello World!
 void zmain(void)
 {
-    printf("\nHello, World!\n");
+//    uint8 SW1_Read(void); 
+//    //printf("\nHello, World!\n");
+//    
+//    if(SW1_Read() == 0){
+//    printf("You pressed button\n");
+//    vTaskDelay(200);
+//    
+//    for(int i = 0; i < 3; i++){
+//        BatteryLed_Write(1);
+//        vTaskDelay(500);
+//        BatteryLed_Write(0);
+//        vTaskDelay(500);
+//    }
+//    
+//    for(int i = 0; i < 3; i++){
+//        BatteryLed_Write(1);
+//        vTaskDelay(1500);
+//        BatteryLed_Write(0);
+//        vTaskDelay(500);
+//    }
+//    
+//    for(int i = 0; i < 3; i++){
+//        BatteryLed_Write(1);
+//        vTaskDelay(500);
+//        BatteryLed_Write(0);
+//        vTaskDelay(500);
+//    }
+//    
+//}
+    
+    
+    // ------------------------------ Tästä eteenpäin on omia testejä! ----------------------------------
+    
+        // 360 ang small circle turn
+        //motor_turn(94, 10, 5400);
+        
+        // 90 ang left turn
+        //motor_turn(0, 94, 1000);
+        
+        // 90 ang right turn
+        //motor_turn(94, 0, 1000);
+    
+    // Ikuinen looppi. Lopettaa toiston napin painon jälkeen.
+    
+    //TickType_t time;
+    
+    while(true){
+    
+        if(SW1_Read() == 0){
+        motor_start();
+        Ultra_Start();
+        //time = xTaskGetTickCount();
+        
+        
+        while(true){
+            //time = xTaskGetTickCount();
+            //motor_forward(100, 100);
+            int x = Ultra_GetDistance();
+            printf("U_distance: %d\n", x);  
+            vTaskDelay(500);
+            
+            
+            if(Ultra_GetDistance() <= 20){
+                //motor_turn(0, 94, 2000);
+                printf("You are now closer than 20 cm!\n");
+            }
+//            if(time > 10000){
+//                motor_forward(0, 0);
+//                break;
+//            }
+        }
+        
+        
 
+        // Fail safe to motor stop
+        motor_forward(0, 0);
+        motor_stop();
+        break;
+        }
+    }
+    
+    
     while(true)
     {
         vTaskDelay(100); // sleep (in an infinite loop)
@@ -70,21 +151,54 @@ void zmain(void)
 // Name and age
 void zmain(void)
 {
-    char name[32];
-    int age;
+    //char name[32];
+    int age, time;
+    TickType_t start;
+    TickType_t stop;
     
     
-    printf("\n\n");
     
-    printf("Enter your name: ");
+    
+    
+    //printf("Enter your name: ");
     //fflush(stdout);
-    scanf("%s", name);
+    //scanf("%s", name);
     printf("Enter your age: ");
+    start = xTaskGetTickCount();
     //fflush(stdout);
     scanf("%d", &age);
-    
-    printf("You are [%s], age = %d\n", name, age);
+    stop = xTaskGetTickCount();
 
+    time = stop - start;
+    
+    printf("Time is value &time\n");
+    
+    if(age < 21){
+        if(time < 3000){
+            printf("Super fast dude!\n");
+        }else if(time >= 3000 && time <= 5000){
+            printf("So mediocre.\n");
+        }else{
+            printf("My granny is faster than you!\n");
+        }
+    }else if(age >= 22 && age <= 50){
+        if(time < 3000){
+            printf("Be quick or be dead\n");
+        }else if(time >= 3000 && time <= 5000){
+            printf("You're so average.\n");
+        }else{
+            printf("Have you been smoking something illegal?\n");
+        }
+    }else{
+        if(time < 3000){
+            printf("Still going strong\n");
+        }else if(time >= 3000 && time <= 5000){
+            printf("You're doing okay for your age.\n");
+        }else{
+            printf("Do they still allow you to drive?\n");
+        }
+    }
+    
     while(true)
     {
         BatteryLed_Write(!SW1_Read());
@@ -106,7 +220,7 @@ void zmain(void)
     printf("\nBoot\n");
 
     //BatteryLed_Write(1); // Switch led on 
-    BatteryLed_Write(0); // Switch led off 
+    //BatteryLed_Write(0); // Switch led off 
     //uint8 button;
     //button = SW1_Read(); // read SW1 on pSoC board
     // SW1_Read() returns zero when button is pressed
@@ -114,17 +228,33 @@ void zmain(void)
 
     while(true)
     {
-        char msg[80];
+        //char msg[80];
         ADC_Battery_StartConvert(); // start sampling
         if(ADC_Battery_IsEndConversion(ADC_Battery_WAIT_FOR_RESULT)) {   // wait for ADC converted value
             adcresult = ADC_Battery_GetResult16(); // get the ADC value (0 - 4095)
             // convert value to Volts
             // you need to implement the conversion
+            volts = ((adcresult / 4095.0) * 1.5 * 5.0);
+            
+            //printf("button state %d\n", button);
+            if(volts < 4){
+                
+                while(SW1_Read() == 1){
+                    BatteryLed_Write(1);
+                    vTaskDelay(500);
+                    BatteryLed_Write(0);
+                    vTaskDelay(500);
+//                    if(SW1_Read() == 0){
+//                        break;
+//                    }
+                }
+                
+            }
             
             // Print both ADC results and converted value
-            printf("%d %f\r\n",adcresult, volts);
+            printf("%d %.2f\r\n",adcresult, volts);
         }
-        vTaskDelay(500);
+        vTaskDelay(1000);
     }
  }   
 #endif
@@ -146,6 +276,19 @@ void zmain(void)
         if(i > 0) {
             printf("Good work\n");
             while(SW1_Read() == 0) vTaskDelay(10); // wait until button is released
+            motor_start();
+            // suorat
+            motor_forward(200, 1750);
+            motor_turn(94, 0, 1400);
+            motor_forward(200, 1500);
+            motor_turn(94, 0, 1400);
+            motor_forward(200, 1550);
+            motor_turn(94, 0, 1750);
+            // Kaari
+            motor_turn(110, 50, 6000);
+            
+            motor_forward(0, 0);
+            motor_stop();
         }
         else {
             printf("You didn't press the button\n");
@@ -167,62 +310,101 @@ void zmain(void)
     //button = SW1_Read(); // read SW1 on pSoC board
     // SW1_Read() returns zero when button is pressed
     // SW1_Read() returns one when button is not pressed
+        while(true){
     
-    bool led = false;
-    
-    while(true)
-    {
-        // toggle led state when button is pressed
-        if(SW1_Read() == 0) {
-            led = !led;
-            BatteryLed_Write(led);
-            if(led) printf("Led is ON\n");
-            else printf("Led is OFF\n");
-            Beep(1000, 150);
-            while(SW1_Read() == 0) vTaskDelay(10); // wait while button is being pressed
-        }        
+        if(SW1_Read() == 0){
+        motor_start();
+        Ultra_Start();
+        
+        
+        while(true){
+            motor_forward(50, 100);
+            //int x = Ultra_GetDistance();
+            //printf("U_distance: %d\n", x);  
+            //vTaskDelay(500);
+            
+            
+            if(Ultra_GetDistance() <= 10){
+                // kun lähempänä kuin 10 cm
+                motor_forward(0, 0);
+                Beep(1000, 100);
+                motor_backward(100, 2000);
+                motor_turn(0, 94, 2000);
+            }
+//            if(time > 10000){
+//                motor_forward(0, 0);
+//                break;
+//            }
+        }
+        
+        
+
+        // Fail safe to motor stop
+        motor_forward(0, 0);
+        motor_stop();
+        break;
+        }
     }
  }   
 #endif
 
 
-#if 0
+#if 1
 //ultrasonic sensor//
 void zmain(void)
 {
-    Ultra_Start();                          // Ultra Sonic Start function
-    
-    while(true) {
-        int d = Ultra_GetDistance();
-        // Print the detected distance (centimeters)
-        printf("distance = %d\r\n", d);
-        vTaskDelay(200);
-    }
-}   
-#endif
+    struct accData_ data;
 
-#if 0
-//IR receiverm - how to wait for IR remote commands
-void zmain(void)
-{
-    IR_Start();
+        while(true){
     
-    printf("\n\nIR test\n");
+        if(SW1_Read() == 0){
+        motor_start();
+        //Ultra_Start();
+        LSM303D_Start();
+        
+        while(true){
+            
+            motor_forward(100, 1000);
+            LSM303D_Read_Acc(&data);
+            int random_n = rand() % 2;
+            printf("X : %10d Y : %10d Z : %10d\n", data.accX, data.accY, data.accZ);
+            //printf("%d ", random_n);
+            vTaskDelay(100);
+
+            
+            if(data.accX <= -1200 || data.accY >= 500){
+                motor_forward(0, 0);
+                vTaskDelay(1000);
+                motor_backward(100, 2000);
+            }else{
+                switch(random_n){
+                
+                    case 0:
+                    motor_turn(0, 90, 1000);
+                    break;
+                
+                    case 1:
+                    motor_turn(90, 0, 1000);
+                    break;
+                
+                    default:
+                    printf("Nyt meni päin helvettiä!\n");
+            }
+            }
+
+        }
+        
+        
+
+        // Fail safe to motor stop
+        motor_forward(0, 0);
+        motor_stop();
+        break;
+        }
+    }
     
-    IR_flush(); // clear IR receive buffer
-    printf("Buffer cleared\n");
-    
-    bool led = false;
-    // Toggle led when IR signal is received
-    while(true)
-    {
-        IR_wait();  // wait for IR command
-        led = !led;
-        BatteryLed_Write(led);
-        if(led) printf("Led is ON\n");
-        else printf("Led is OFF\n");
-    }    
- }   
+
+}   
 #endif
 
 
