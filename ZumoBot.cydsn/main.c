@@ -57,27 +57,33 @@ void satunnais_kaannos();
  * @details  ** Enable global interrupt since Zumo library uses interrupts. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
 
-#if 0
+#if 1
     
     void zmain(void)
     {
         void tankTurnLeft();
+        void turnLeft();
         motor_start();
         tankTurnLeft();
+        //turnLeft();
         motor_forward(0,0);
     }
     
 void tankTurnLeft(){
     MotorDirLeft_Write(1);      // set LeftMotor backward mode
     MotorDirRight_Write(0);     // set RightMotor forward mode
-    PWM_WriteCompare1(100); 
+    PWM_WriteCompare1(50); 
     PWM_WriteCompare2(100); 
     vTaskDelay(900);
+}
+
+void turnLeft(){
+    motor_turn(0, 100, 1200);
 }
     
 #endif
 
-#if 1
+#if 0
     void zmain(void)
     {
         // Initializing methods
@@ -101,6 +107,7 @@ void tankTurnLeft(){
         // Creating variables
         struct sensors_ ref;
         uint8 SW1_Read(void);
+        int count = 1;
 
         // Starting needed sensors
         reflectance_start();
@@ -135,7 +142,33 @@ void tankTurnLeft(){
                     if(isLineMiddle(ref)){
                         moveForward();
                     }else if(isLineIntersection(ref)){
-                        tankTurnLeft();
+                        
+                        
+                        
+                        switch(count){
+                        
+                            case 1: 
+                            turnLeft();
+                            count++;
+                            break;
+                            
+                            case 2:
+                            turnRight();
+                            count++;
+                            break;
+                            
+                            case 3:
+                            turnRight();
+                            count++;
+                            break;
+                            
+                            case 4:
+                            motor_stop();
+                            count++;
+                            break;
+                        
+                        }
+                        
                     }else if(isLineLittleRight(ref)){
                         backToMiddleLineRight();
                     }else if(isLineLittleLeft(ref)){
@@ -207,7 +240,7 @@ bool isLineMoreLeft(struct sensors_ ref){
 }
 
 void turnLeft(){
-    motor_turn(0, 150, 0);
+    motor_turn(50, 100, 900);
 }
 
 void skip(){
@@ -215,7 +248,7 @@ void skip(){
 }
 
 void turnRight(){
-    motor_turn(150, 0, 0);
+    motor_turn(100, 50, 900);
 }
 
 void moveForward(){
