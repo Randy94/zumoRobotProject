@@ -136,12 +136,14 @@ void tankTurnLeft(){
                         moveForward();
                     }else if(isLineIntersection(ref)){
                         tankTurnLeft();
-                    }else if(isLineLittleRight(ref) || isLineMoreRight(ref)){
-                        backToMiddleLineLeft();
-                    }else if(isLineLittleLeft(ref) || isLineMoreLeft(ref)){
+                    }else if(isLineLittleRight(ref)){
                         backToMiddleLineRight();
-                    }else{
-                        moveForward();
+                    }else if(isLineLittleLeft(ref)){
+                        backToMiddleLineLeft();
+                    }else if(isLineMoreRight(ref)){
+                        turnRight();
+                    }else if(isLineMoreLeft(ref)){
+                        turnLeft();
                     }
                 
                 }
@@ -205,7 +207,7 @@ bool isLineMoreLeft(struct sensors_ ref){
 }
 
 void turnLeft(){
-    motor_turn(0, 150, 1);
+    motor_turn(0, 150, 0);
 }
 
 void skip(){
@@ -213,11 +215,11 @@ void skip(){
 }
 
 void turnRight(){
-    motor_turn(150, 0, 1);
+    motor_turn(150, 0, 0);
 }
 
 void moveForward(){
-    motor_forward(50, 1);
+    motor_forward(40, 0);
 }
 
 void stopMovement(){
@@ -257,11 +259,11 @@ void tankTurnRightExtreme(){
 }
 
 void backToMiddleLineRight(){
-    motor_turn(200, 100, 10);
+    motor_turn(100, 50, 100);
 }
 
 void backToMiddleLineLeft(){
-    motor_turn(100, 200, 10);
+    motor_turn(50, 100, 100);
 }
 
 
