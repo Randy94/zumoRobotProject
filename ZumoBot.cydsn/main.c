@@ -57,6 +57,219 @@ void satunnais_kaannos();
  * @details  ** Enable global interrupt since Zumo library uses interrupts. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
 
+#if 0
+    
+    void zmain(void)
+    {
+        void tankTurnLeft();
+        motor_start();
+        tankTurnLeft();
+        motor_forward(0,0);
+    }
+    
+void tankTurnLeft(){
+    MotorDirLeft_Write(1);      // set LeftMotor backward mode
+    MotorDirRight_Write(0);     // set RightMotor forward mode
+    PWM_WriteCompare1(100); 
+    PWM_WriteCompare2(100); 
+    vTaskDelay(900);
+}
+    
+#endif
+
+#if 1
+    void zmain(void)
+    {
+        // Initializing methods
+        bool isLineMiddle();
+        bool isLineIntersection();
+        bool isLineLittleRight();
+        bool isLineLittleLeft();
+        bool isLineMoreRight();
+        bool isLineMoreLeft();
+        void moveForward();
+        void turnLeft();
+        void turnRight();
+        void stopMovement();
+        void tankTurnLeft();
+        void tankTurnRight();
+        void skip();
+        void backToMiddleLineRight();
+        void backToMiddleLineLeft();
+
+        
+        // Creating variables
+        struct sensors_ ref;
+        uint8 SW1_Read(void);
+
+        // Starting needed sensors
+        reflectance_start();
+        motor_start();
+        IR_Start();
+        
+
+        // Main while loop
+        while(true){
+        
+            if(SW1_Read() == 0){
+                
+                // Loop to the first intersectio waiting for IR Signal!
+                while(true){
+                    reflectance_read(&ref);
+                    motor_forward(50, 10);
+                    if(isLineIntersection(ref)){
+                        skip();
+                        stopMovement();
+                        IR_flush();
+                        IR_wait();
+                        break;
+                    }
+                }
+                
+                // Start of the line following
+                while(true){
+                
+                    reflectance_read(&ref);
+                    printf(" _||_ %d, %d, %d, %d, %d, %d\n", ref.l3, ref.l2, ref.l1, ref.r1, ref.r2, ref.r3);
+                    
+                    if(isLineMiddle(ref)){
+                        moveForward();
+                    }else if(isLineIntersection(ref)){
+                        tankTurnLeft();
+                    }else if(isLineLittleRight(ref) || isLineMoreRight(ref)){
+                        backToMiddleLineLeft();
+                    }else if(isLineLittleLeft(ref) || isLineMoreLeft(ref)){
+                        backToMiddleLineRight();
+                    }else{
+                        moveForward();
+                    }
+                
+                }
+                
+            }
+        }
+    }
+    
+bool isLineMiddle(struct sensors_ ref){
+
+    if(ref.l1 >= 10000 && ref.r1 >= 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r2 < 10000 && ref.r3 < 10000){
+        return true;
+    }
+    
+    return false;
+}
+
+bool isLineIntersection(struct sensors_ ref){
+    
+    int average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
+    
+    if(average >= 14000){
+        return true;
+    }
+    
+    return false;
+}
+
+bool isLineLittleRight(struct sensors_ ref){
+    
+    if(ref.r1 >= 10000 && ref.r2 >= 10000 && ref.l1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r3 < 10000 ){
+        return true;
+    }
+    
+    return false;
+}
+
+bool isLineLittleLeft(struct sensors_ ref){
+    
+    if(ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 < 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
+        return true;
+    }
+    
+    return false;
+}
+
+bool isLineMoreRight(struct sensors_ ref){
+    
+    if(ref.r2 >= 10000 && ref.r3 >= 10000 && ref.r1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.l1 < 10000){
+        return true;
+    }
+    return false;
+}
+
+bool isLineMoreLeft(struct sensors_ ref){
+    
+    if(ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 && ref.l1 < 10000){
+        return true;
+    }
+    return false;
+}
+
+void turnLeft(){
+    motor_turn(0, 150, 1);
+}
+
+void skip(){
+    motor_forward(100, 100);
+}
+
+void turnRight(){
+    motor_turn(150, 0, 1);
+}
+
+void moveForward(){
+    motor_forward(50, 1);
+}
+
+void stopMovement(){
+    motor_forward(0, 0);
+}
+
+
+void tankTurnLeft(){
+    MotorDirLeft_Write(1);      // set LeftMotor backward mode
+    MotorDirRight_Write(0);     // set RightMotor forward mode
+    PWM_WriteCompare1(100); 
+    PWM_WriteCompare2(100); 
+    vTaskDelay(900);
+}
+
+void tankTurnRight(){
+    MotorDirLeft_Write(0);      // set LeftMotor backward mode
+    MotorDirRight_Write(1);     // set RightMotor forward mode
+    PWM_WriteCompare1(100); 
+    PWM_WriteCompare2(100); 
+    vTaskDelay(900);
+}
+void tankTurnLeftExtreme(){
+    MotorDirLeft_Write(1);      // set LeftMotor backward mode
+    MotorDirRight_Write(0);     // set RightMotor forward mode
+    PWM_WriteCompare1(250); 
+    PWM_WriteCompare2(250); 
+    vTaskDelay(250);
+}
+
+void tankTurnRightExtreme(){
+    MotorDirLeft_Write(0);      // set LeftMotor backward mode
+    MotorDirRight_Write(1);     // set RightMotor forward mode
+    PWM_WriteCompare1(250); 
+    PWM_WriteCompare2(250); 
+    vTaskDelay(250);
+}
+
+void backToMiddleLineRight(){
+    motor_turn(200, 100, 10);
+}
+
+void backToMiddleLineLeft(){
+    motor_turn(100, 200, 10);
+}
+
+
+
+// some debug prints
+// printf(" _||_ %d", );
+    
+#endif
 
 #if 0
 // Hello World!
@@ -282,14 +495,15 @@ void zmain(void)
             while(SW1_Read() == 0) vTaskDelay(10); // wait until button is released
             motor_start();
             // suorat
-            motor_forward(200, 1750);
-            motor_turn(94, 0, 1400);
+            motor_forward(200, 1850);
+            motor_turn(96, 0, 1400);
             motor_forward(200, 1500);
-            motor_turn(94, 0, 1400);
+            motor_turn(96, 0, 1400);
             motor_forward(200, 1550);
-            motor_turn(94, 0, 1750);
+            motor_turn(96, 0, 1750);
             // Kaari
-            motor_turn(110, 50, 6000);
+            motor_turn(110, 50, 4000);
+            motor_forward(200,700);
             
             motor_forward(0, 0);
             motor_stop();
@@ -353,7 +567,7 @@ void zmain(void)
 #endif
 
 
-#if 1
+#if 0
 //ultrasonic sensor//
 void zmain(void)
 {
@@ -365,43 +579,54 @@ void zmain(void)
         motor_start();
         //Ultra_Start();
         LSM303D_Start();
-        TickType_t time;
-        time = xTaskGetTickCount();
-        TickType_t runningtime;
+        //TickType_t time;
+        //time = xTaskGetTickCount();
+        //TickType_t runningtime;
         
         int count = 0;
-        int data_average_x = 0;
-        int data_average_y = 0;
-        int keskiarvo = 0;
+        //int data_average_x = 0;
+        //int data_average_y = 0;
+        //int keskiarvo = 0;
         
         while(true){
             
-            motor_forward(100, 100);
+            motor_forward(100, 0);
+            
             LSM303D_Read_Acc(&data);
+            
+            /*
             time = xTaskGetTickCount();
             runningtime= time % 3000;
+            */
             
-            data_average_x += data.accX;
-            data_average_y += data.accY;
+            //time = xTaskGetTickCount();
+            
+            //data_average_x += data.accX;
+            //data_average_y += data.accY;
             
             count++;
             
-            printf("X : %10d Y : %10d Z : %10d\n", data.accX, data.accY, data.accZ);
-            printf("X kesiarvo on: %d\n", (data_average_x / count));
+//            printf("X : %10d Y : %10d Z : %10d\n", data.accX, data.accY, data.accZ);
+//            printf("X kesiarvo on: %d\n", (data_average_x / count));
+            //printf("TickType_t = %lu\n", time);
             //printf("Y kesiarvo on: %d\n", (data_average_y / count));
-            //printf("%d ", random_n);
-            vTaskDelay(1);
-            if(runningtime == 0){
+//            printf("%d \n", count);
+//            vTaskDelay(10);
+//            
+            if(count > 1600){
+                //time = 0;
+                count = 0;
                 satunnais_kaannos();
             }
 
-            keskiarvo = data_average_x / count;
+            //keskiarvo = data_average_x / count;
             
-            if((keskiarvo - data.accX) <  -2000){
+            if((data.accX) <  -2500){
                 motor_forward(0, 0);
-                vTaskDelay(100);
+//                vTaskDelay(100);
                 motor_backward(100, 2000);
                 satunnais_kaannos();
+                count = 0;
             }
 
         }
@@ -421,19 +646,25 @@ void satunnais_kaannos(){
     
                 int random_n = rand() % 2;
                 
-                switch(random_n){
-
-                    case 0:
-                    motor_turn(0, 90, 1000);
-                    break;
-
-                    case 1:
-                    motor_turn(90, 0, 1000);
-                    break;
-
-                    default:
-                    printf("Nyt meni päin helvettiä!\n");
+                if(random_n == 1){
+                    motor_turn(0,200, 400);
+                }else{
+                    motor_turn(200, 0, 400);
                 }
+                
+//                switch(random_n){
+//
+//                    case 0:
+//                    motor_turn(0, 90, 1000);
+//                    break;
+//
+//                    case 1:
+//                    motor_turn(90, 0, 1000);
+//                    break;
+//
+//                    default:
+//                    printf("Nyt meni päin helvettiä!\n");
+//                }
 }
 
 
@@ -447,56 +678,184 @@ void satunnais_kaannos(){
 //IR receiver - read raw data
 void zmain(void)
 {
+    int intersectionStop();
+    // Startting needed sensor and motoros
+    motor_start();
+    reflectance_start();
+    uint8 SW1_Read(void);
     IR_Start();
     
-    uint32_t IR_val; 
+    // Initializing variables
+    struct sensors_ ref;
+    int count = 0;
     
-    printf("\n\nIR test\n");
+    while(true){
     
-    IR_flush(); // clear IR receive buffer
-    printf("Buffer cleared\n");
-    
-    // print received IR pulses and their lengths
-    while(true)
-    {
-        if(IR_get(&IR_val, portMAX_DELAY)) {
-            int l = IR_val & IR_SIGNAL_MASK; // get pulse length
-            int b = 0;
-            if((IR_val & IR_SIGNAL_HIGH) != 0) b = 1; // get pulse state (0/1)
-            printf("%d %d\r\n",b, l);
+    if(SW1_Read() == 0){
+        
+        while(true)
+        {
+            motor_forward(50, 50);
+            reflectance_read(&ref);
+            if(intersectionStop(ref) == 1){
+                break;
+            }
+            
         }
-    }    
- }   
-#endif
+        
+        
+        motor_start();
+        IR_wait(); 
+        
+        while(true){
+        
+            motor_forward(50, 10);
+            count++;
+            printf("count : %d\n", count);
+            reflectance_read(&ref);
 
+            if(count > 250){
+                intersectionStop(ref);
+            }
+        }
+        
+    }
+}
+
+}
+
+
+
+int intersectionStop(struct sensors_ ref){
+    
+    int average;
+    
+    average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
+    
+    printf("averaga is_ %d\n", average);
+    
+    if(average >= 12000){
+        motor_forward(0, 0);
+        motor_stop();
+        printf("inside %d\n", average);
+        return 1;
+    }
+    
+    return 0;
+    
+}
+
+
+int lineCount(struct sensors_ ref){
+
+    int average;
+    average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
+    
+    if(average >= 12000){
+        motor_forward(100, 200);
+        return 1;
+    }
+    
+    return 0;
+}
+
+#endif
 
 #if 0
 //reflectance
 void zmain(void)
 {
     struct sensors_ ref;
-    struct sensors_ dig;
+    uint8 SW1_Read(void);
+    int intersectionStop();
+    void turnLeft();
 
     reflectance_start();
-    reflectance_set_threshold(9000, 9000, 11000, 11000, 9000, 9000); // set center sensor threshold to 11000 and others to 9000
-    
+    motor_start();
+    IR_Start();
 
-    while(true)
-    {
-        // read raw sensor values
-        reflectance_read(&ref);
-        // print out each period of reflectance sensors
-        printf("%5d %5d %5d %5d %5d %5d\r\n", ref.l3, ref.l2, ref.l1, ref.r1, ref.r2, ref.r3);       
+    while(true){
+    
+        if(SW1_Read() == 0){
         
-        // read digital values that are based on threshold. 0 = white, 1 = black
-        // when blackness value is over threshold the sensors reads 1, otherwise 0
-        reflectance_digital(&dig); 
-        //print out 0 or 1 according to results of reflectance period
-        printf("%5d %5d %5d %5d %5d %5d \r\n", dig.l3, dig.l2, dig.l1, dig.r1, dig.r2, dig.r3);        
-        
-        vTaskDelay(200);
+        while(true)
+        {
+            motor_forward(50, 50);
+            reflectance_read(&ref);
+            if(intersectionStop(ref) == 1){
+                break;
+            }
+            
+        }
+        break;
+        }
     }
+      
+        IR_wait();
+        motor_start();
+        
+        while(true){
+            reflectance_read(&ref);
+            motor_forward(100, 10);
+            intersectionStop(ref);
+            turnLeft(ref);
+        }
+        
+    
+    
+    
 }   
+
+int intersectionStop(struct sensors_ ref){
+    
+    while(true){
+        int average;
+        average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
+            if(average >= 12000){
+                motor_forward(0, 0);
+                motor_stop();
+                printf("inside %d\n", average);
+                return 1;
+            }
+        
+    }
+    
+    return 0;
+    
+}
+
+void turnLeft(struct sensors_ ref){
+    motor_start();
+    while(true){
+        int middle = (ref.l1 + ref.r1) / 2;
+        int sides = (ref.l2 + ref.l3 + ref.r2 + ref.r3) / 4;
+        if(middle >= 12000 && sides <= 12000){
+            break;
+        }else{
+            motor_turn(0, 100, 10);
+        }
+    }
+}
+
+// --------------------------------- Here is some grunt work -----------------------------------------
+
+// --------------------------------- Truth methods ---------------------------------------------------
+
+bool isLineMiddle(struct sensors_ ref){
+
+    if(ref.l1 >= 12000 && ref.r1 >= 12000 && ref.l2 < 12000 && ref.l3 < 12000 && ref.r2 < 12000 && ref.r3 < 12000){
+        return true;
+    }
+    
+    return false;
+}
+
+// --------------------------------- Movement methods ------------------------------------------------
+
+void moveForward(){
+    motor_forward(150, 10);
+}
+
 #endif
 
 
