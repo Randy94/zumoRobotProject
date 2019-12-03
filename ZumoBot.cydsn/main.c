@@ -57,7 +57,7 @@ void satunnais_kaannos();
  * @details  ** Enable global interrupt since Zumo library uses interrupts. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
 
-#if 1
+#if 0
     
     void zmain(void)
     {
@@ -72,7 +72,7 @@ void satunnais_kaannos();
 void tankTurnLeft(){
     MotorDirLeft_Write(1);      // set LeftMotor backward mode
     MotorDirRight_Write(0);     // set RightMotor forward mode
-    PWM_WriteCompare1(50); 
+    PWM_WriteCompare1(100); 
     PWM_WriteCompare2(100); 
     vTaskDelay(900);
 }
@@ -83,7 +83,7 @@ void turnLeft(){
     
 #endif
 
-#if 0
+#if 1
     void zmain(void)
     {
         // Initializing methods
@@ -107,7 +107,6 @@ void turnLeft(){
         // Creating variables
         struct sensors_ ref;
         uint8 SW1_Read(void);
-        int count = 1;
 
         // Starting needed sensors
         reflectance_start();
@@ -142,33 +141,7 @@ void turnLeft(){
                     if(isLineMiddle(ref)){
                         moveForward();
                     }else if(isLineIntersection(ref)){
-                        
-                        
-                        
-                        switch(count){
-                        
-                            case 1: 
-                            turnLeft();
-                            count++;
-                            break;
-                            
-                            case 2:
-                            turnRight();
-                            count++;
-                            break;
-                            
-                            case 3:
-                            turnRight();
-                            count++;
-                            break;
-                            
-                            case 4:
-                            motor_stop();
-                            count++;
-                            break;
-                        
-                        }
-                        
+                        stopMovement();
                     }else if(isLineLittleRight(ref)){
                         backToMiddleLineRight();
                     }else if(isLineLittleLeft(ref)){
@@ -187,6 +160,7 @@ void turnLeft(){
     
 bool isLineMiddle(struct sensors_ ref){
 
+    // Lisää lisä ehto jos vain jompi kumpi palaa 
     if(ref.l1 >= 10000 && ref.r1 >= 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r2 < 10000 && ref.r3 < 10000){
         return true;
     }
@@ -207,6 +181,7 @@ bool isLineIntersection(struct sensors_ ref){
 
 bool isLineLittleRight(struct sensors_ ref){
     
+    // Lisää lisä ehto jos vain jompi kumpi palaa 
     if(ref.r1 >= 10000 && ref.r2 >= 10000 && ref.l1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r3 < 10000 ){
         return true;
     }
@@ -216,6 +191,7 @@ bool isLineLittleRight(struct sensors_ ref){
 
 bool isLineLittleLeft(struct sensors_ ref){
     
+    // Lisää lisä ehto jos vain jompi kumpi palaa 
     if(ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 < 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
         return true;
     }
@@ -225,6 +201,7 @@ bool isLineLittleLeft(struct sensors_ ref){
 
 bool isLineMoreRight(struct sensors_ ref){
     
+    // Lisää lisä ehto jos vain jompi kumpi palaa 
     if(ref.r2 >= 10000 && ref.r3 >= 10000 && ref.r1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.l1 < 10000){
         return true;
     }
@@ -233,22 +210,25 @@ bool isLineMoreRight(struct sensors_ ref){
 
 bool isLineMoreLeft(struct sensors_ ref){
     
+    // Lisää lisä ehto jos vain jompi kumpi palaa 
     if(ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 && ref.l1 < 10000){
         return true;
     }
     return false;
 }
 
+// bool isLineIntersectionCorner tarkoituksena on palata viivalle takaisin
+
 void turnLeft(){
-    motor_turn(50, 100, 900);
+    motor_turn(50, 100, 0);
 }
 
 void skip(){
-    motor_forward(100, 100);
+    motor_forward(60, 300);
 }
 
 void turnRight(){
-    motor_turn(100, 50, 900);
+    motor_turn(100, 50, 0);
 }
 
 void moveForward(){
@@ -265,7 +245,8 @@ void tankTurnLeft(){
     MotorDirRight_Write(0);     // set RightMotor forward mode
     PWM_WriteCompare1(100); 
     PWM_WriteCompare2(100); 
-    vTaskDelay(900);
+    vTaskDelay(800);
+    MotorDirLeft_Write(0);
 }
 
 void tankTurnRight(){
@@ -273,7 +254,8 @@ void tankTurnRight(){
     MotorDirRight_Write(1);     // set RightMotor forward mode
     PWM_WriteCompare1(100); 
     PWM_WriteCompare2(100); 
-    vTaskDelay(900);
+    vTaskDelay(800);
+    MotorDirRight_Write(0);
 }
 void tankTurnLeftExtreme(){
     MotorDirLeft_Write(1);      // set LeftMotor backward mode
@@ -292,11 +274,11 @@ void tankTurnRightExtreme(){
 }
 
 void backToMiddleLineRight(){
-    motor_turn(100, 50, 100);
+    motor_turn(140, 50, 0);
 }
 
 void backToMiddleLineLeft(){
-    motor_turn(50, 100, 100);
+    motor_turn(50, 140, 0);
 }
 
 
@@ -797,100 +779,217 @@ int lineCount(struct sensors_ ref){
 #endif
 
 #if 0
-//reflectance
-void zmain(void)
-{
-    struct sensors_ ref;
-    uint8 SW1_Read(void);
-    int intersectionStop();
-    void turnLeft();
+    void zmain(void)
+    {
+        // Initializing methods
+        bool isLineMiddle();
+        bool isLineIntersection();
+        bool isLineLittleRight();
+        bool isLineLittleLeft();
+        bool isLineMoreRight();
+        bool isLineMoreLeft();
+        void moveForward();
+        void turnLeft();
+        void turnRight();
+        void stopMovement();
+        void tankTurnLeft();
+        void tankTurnRight();
+        void skip();
+        void backToMiddleLineRight();
+        void backToMiddleLineLeft();
 
-    reflectance_start();
-    motor_start();
-    IR_Start();
-
-    while(true){
-    
-        if(SW1_Read() == 0){
         
-        while(true)
-        {
-            motor_forward(50, 50);
-            reflectance_read(&ref);
-            if(intersectionStop(ref) == 1){
-                break;
-            }
-            
-        }
-        break;
-        }
-    }
-      
-        IR_wait();
+        // Creating variables
+        struct sensors_ ref;
+        uint8 SW1_Read(void);
+        int count = 1;
+
+        // Starting needed sensors
+        reflectance_start();
         motor_start();
+        IR_Start();
         
+
+        // Main while loop
         while(true){
-            reflectance_read(&ref);
-            motor_forward(100, 10);
-            intersectionStop(ref);
-            turnLeft(ref);
-        }
         
-    
-    
-    
-}   
-
-int intersectionStop(struct sensors_ ref){
-    
-    while(true){
-        int average;
-        average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
-            if(average >= 12000){
-                motor_forward(0, 0);
-                motor_stop();
-                printf("inside %d\n", average);
-                return 1;
+            if(SW1_Read() == 0){
+                
+                // Loop to the first intersectio waiting for IR Signal!
+                while(true){
+                    reflectance_read(&ref);
+                    motor_forward(50, 10);
+                    if(isLineIntersection(ref)){
+                        skip();
+                        stopMovement();
+                        IR_flush();
+                        IR_wait();
+                        break;
+                    }
+                }
+                
+                // Start of the line following
+                while(true){
+                
+                    reflectance_read(&ref);
+                    printf(" _||_ %d, %d, %d, %d, %d, %d\n", ref.l3, ref.l2, ref.l1, ref.r1, ref.r2, ref.r3);
+                    
+                    if(isLineMiddle(ref)){
+                        moveForward();
+                    }else if(isLineIntersection(ref)){
+                        if(count == 1){
+                            skip();
+                            tankTurnLeft();
+                            count++;
+                        }else if(count == 2){
+                            printf("vitun valtteri/n");
+                            skip();
+                            tankTurnRight();
+                            count++;
+                        }else if(count == 3){
+                            skip();
+                            tankTurnRight();
+                            count++;
+                        }else{
+                            motor_stop();
+                        }
+                    }else if(isLineLittleRight(ref)){
+                        backToMiddleLineRight();
+                    }else if(isLineLittleLeft(ref)){
+                        backToMiddleLineLeft();
+                    }else if(isLineMoreRight(ref)){
+                        turnRight();
+                    }else if(isLineMoreLeft(ref)){
+                        turnLeft();
+                    }
+                
+                }
+                
             }
-        
-    }
-    
-    return 0;
-    
-}
-
-void turnLeft(struct sensors_ ref){
-    motor_start();
-    while(true){
-        int middle = (ref.l1 + ref.r1) / 2;
-        int sides = (ref.l2 + ref.l3 + ref.r2 + ref.r3) / 4;
-        if(middle >= 12000 && sides <= 12000){
-            break;
-        }else{
-            motor_turn(0, 100, 10);
         }
     }
-}
-
-// --------------------------------- Here is some grunt work -----------------------------------------
-
-// --------------------------------- Truth methods ---------------------------------------------------
-
+    
 bool isLineMiddle(struct sensors_ ref){
 
-    if(ref.l1 >= 12000 && ref.r1 >= 12000 && ref.l2 < 12000 && ref.l3 < 12000 && ref.r2 < 12000 && ref.r3 < 12000){
+    if(ref.l1 >= 10000 && ref.r1 >= 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r2 < 10000 && ref.r3 < 10000){
         return true;
     }
     
     return false;
 }
 
-// --------------------------------- Movement methods ------------------------------------------------
-
-void moveForward(){
-    motor_forward(150, 10);
+bool isLineIntersection(struct sensors_ ref){
+    
+    int average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
+    
+    if(average >= 14000){
+        return true;
+    }
+    
+    return false;
 }
 
+bool isLineLittleRight(struct sensors_ ref){
+    
+    if(ref.r1 >= 10000 && ref.r2 >= 10000 && ref.l1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r3 < 10000 ){
+        return true;
+    }
+    
+    return false;
+}
+
+bool isLineLittleLeft(struct sensors_ ref){
+    
+    if(ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 < 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
+        return true;
+    }
+    
+    return false;
+}
+
+bool isLineMoreRight(struct sensors_ ref){
+    
+    if(ref.r2 >= 10000 && ref.r3 >= 10000 && ref.r1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.l1 < 10000){
+        return true;
+    }
+    return false;
+}
+
+bool isLineMoreLeft(struct sensors_ ref){
+    
+    if(ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 && ref.l1 < 10000){
+        return true;
+    }
+    return false;
+}
+
+void turnLeft(){
+    motor_turn(50, 100, 900);
+}
+
+void skip(){
+    motor_forward(60, 300);
+}
+
+void turnRight(){
+    motor_turn(100, 50, 900);
+}
+
+void moveForward(){
+    motor_forward(40, 0);
+}
+
+void stopMovement(){
+    motor_forward(0, 0);
+}
+
+
+void tankTurnLeft(){
+    MotorDirLeft_Write(1);      // set LeftMotor backward mode
+    MotorDirRight_Write(0);     // set RightMotor forward mode
+    PWM_WriteCompare1(100); 
+    PWM_WriteCompare2(100); 
+    vTaskDelay(800);
+    MotorDirLeft_Write(0);
+}
+
+void tankTurnRight(){
+    MotorDirLeft_Write(0);      // set LeftMotor backward mode
+    MotorDirRight_Write(1);     // set RightMotor forward mode
+    PWM_WriteCompare1(100); 
+    PWM_WriteCompare2(100); 
+    vTaskDelay(800);
+    MotorDirRight_Write(0);
+}
+void tankTurnLeftExtreme(){
+    MotorDirLeft_Write(1);      // set LeftMotor backward mode
+    MotorDirRight_Write(0);     // set RightMotor forward mode
+    PWM_WriteCompare1(250); 
+    PWM_WriteCompare2(250); 
+    vTaskDelay(250);
+}
+
+void tankTurnRightExtreme(){
+    MotorDirLeft_Write(0);      // set LeftMotor backward mode
+    MotorDirRight_Write(1);     // set RightMotor forward mode
+    PWM_WriteCompare1(250); 
+    PWM_WriteCompare2(250); 
+    vTaskDelay(250);
+}
+
+void backToMiddleLineRight(){
+    motor_turn(100, 50, 100);
+}
+
+void backToMiddleLineLeft(){
+    motor_turn(50, 100, 100);
+}
+
+
+
+// some debug prints
+// printf(" _||_ %d", );
+    
 #endif
 
 
