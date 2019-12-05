@@ -64,22 +64,17 @@ void satunnais_kaannos();
         void tankTurnLeft();
         void turnLeft();
         motor_start();
-        tankTurnLeft();
-        //turnLeft();
+
+        
+        while(true){
+            
+        }
+        
+        
         motor_forward(0,0);
     }
     
-void tankTurnLeft(){
-    MotorDirLeft_Write(1);      // set LeftMotor backward mode
-    MotorDirRight_Write(0);     // set RightMotor forward mode
-    PWM_WriteCompare1(100); 
-    PWM_WriteCompare2(100); 
-    vTaskDelay(900);
-}
 
-void turnLeft(){
-    motor_turn(0, 100, 1200);
-}
     
 #endif
 #if 1
@@ -264,11 +259,15 @@ void turnLeft(){
         void skip();
         void backToMiddleLineRight();
         void backToMiddleLineLeft();
+        int count = 0;
+        send_mqtt("Zumo045/debug","toimii");
+        
 
         
         // Creating variables
         struct sensors_ ref;
         uint8 SW1_Read(void);
+        
 
         // Starting needed sensors
         reflectance_start();
@@ -295,12 +294,16 @@ void turnLeft(){
                 }
                 
                 // Start of the line following
-                while(true){
-                
+                while(true){                    
                     reflectance_read(&ref);
                     printf(" _||_ %d, %d, %d, %d, %d, %d\n", ref.l3, ref.l2, ref.l1, ref.r1, ref.r2, ref.r3);
                     if(isLineIntersection(ref)){
-                        stopMovement();
+                        if(count>=8){
+                            motor_forward(0,0);
+                            motor_stop();
+                        }else{
+                            moveForward();
+                            count++;}                        
                     }else if(isLineMiddle(ref)){
                         moveForward();
                     }else if(isLineLittleRight(ref)){
@@ -359,7 +362,7 @@ bool isLineIntersection(struct sensors_ ref){
     
     int average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
     
-    if(average >= 14000){
+    if(average >= 23000){
         return true;
     }
     
@@ -420,11 +423,42 @@ bool endOfTheLineRight(struct sensors_ ref){
 }
 // bool isLineIntersectionCorner tarkoituksena on palata viivalle takaisin
 
+//void turnLeft(){
+//    motor_turn(30, 255, 0);
+//}
+//void hardTurnLeft(){
+//    motor_turn(0, 255, 0);
+//}
+//
+//void skip(){
+//    motor_forward(60, 200);
+//}
+//
+//void turnRight(){
+//    motor_turn(255, 30, 0);
+//}
+//void hardTurnRight(){
+//    motor_turn(255, 0, 0);
+//}
+//void backToMiddleLineRight(){
+//    motor_turn(255, 180, 0);
+//}
+//
+//void backToMiddleLineLeft(){
+//    motor_turn(180, 255, 0);
+//}
+//void moveForward(){
+//    motor_forward(255, 0);
+//}
+//
+//void stopMovement(){
+//    motor_forward(0, 0);
+//}
 void turnLeft(){
-    motor_turn(80, 240, 0);
+    motor_turn(40, 255, 0);
 }
 void hardTurnLeft(){
-    motor_turn(0, 240, 0);
+    motor_turn(0, 255, 0);
 }
 
 void skip(){
@@ -432,20 +466,20 @@ void skip(){
 }
 
 void turnRight(){
-    motor_turn(240, 80, 0);
+    motor_turn(255, 40, 0);
 }
 void hardTurnRight(){
-    motor_turn(240, 0, 0);
+    motor_turn(255, 0, 0);
 }
 void backToMiddleLineRight(){
-    motor_turn(255, 200, 0);
+    motor_turn(180, 120, 0);
 }
 
 void backToMiddleLineLeft(){
-    motor_turn(200, 255, 0);
+    motor_turn(120, 180, 0);
 }
 void moveForward(){
-    motor_forward(255, 0);
+    motor_forward(160, 0);
 }
 
 void stopMovement(){
@@ -487,6 +521,33 @@ void tankTurnRightExtreme(){
 }
 
 
+
+void setRealTime(int hours, int minutes, int seconds){
+
+    RTC_Start();
+    
+    RTC_TIME_DATE now;
+    now.DayOfYear = 2019;
+    now.DayOfMonth = 12;
+    now.DayOfWeek = 51;
+    now.Hour = hours;
+    now.Min = minutes;
+    now.Sec = seconds;
+    
+    RTC_WriteTime(&now);
+    
+}
+
+void getRealTime(){
+    RTC_TIME_DATE now;
+    RTC_DisableInt();
+    now = *RTC_ReadTime();
+    RTC_EnableInt();
+    
+    //print the current time
+    printf("%2d:%02d.%02d\n", now.Hour, now.Min, now.Sec);
+    
+}
 
 
 
