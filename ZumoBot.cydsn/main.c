@@ -92,7 +92,7 @@ void satunnais_kaannos();
       void hardTurnLeft();
       void hardTurnRight();
       void moveForward();
-      void goBack;
+      void goBack();
       void skip();
       void stopMovement();
     
@@ -139,14 +139,9 @@ void satunnais_kaannos();
                         backToMiddleLineRight();
                     }else if(isLineLittleLeft(ref)){
                         backToMiddleLineLeft();
-                    
-                    
-                
-                
-                
-                
-                
-                
+                    }
+            }
+        }
     }
     
     
@@ -160,7 +155,7 @@ void satunnais_kaannos();
     
     
     
-}
+
     bool isLineIntersection(struct sensors_ ref){
     
     int average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
@@ -202,44 +197,41 @@ void satunnais_kaannos();
     
     return false;
 }
-    bool isLineIntersection(struct sensors_ ref){
-    
-    int average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
-    
-    if(average >= 14000){
-        return true;
-    }
-    
-    return false;
-}
     
     void moveForward(){
         motor_forward(255, 0);
-    } 
+    }
+    
     void hardTurnLeft(){
         motor_turn(0, 240, 0);
     }
+    
     void hardTurnRight(){
         motor_turn(240, 0, 0);
     }
+    
     void backToMiddleLineRight(){
         motor_turn(255, 200, 0);
     }
+    
     void backToMiddleLineLeft(){
         motor_turn(200, 255, 0);
     }
+    
     void goBack(){
         motor_forward(0, 0);
-        motor_backward(100, 0);                
-            
+        motor_backward(100, 0);                        
+    }
+    
     void skip(){
     motor_forward(60, 200);
     }
+    
     void stopMovement(){
     motor_forward(0, 0);
     }
     
-}
+
 
 #endif
 
