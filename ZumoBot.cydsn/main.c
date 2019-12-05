@@ -88,22 +88,30 @@ void satunnais_kaannos();
         bool isLineLittleLeft();
         bool isLineMoreRight();
         bool isLineMoreLeft();
+        bool isLineOnRightEdge();
+        bool isLineOnLeftEdge();
+        bool endOfTheLineRight();
+        bool endOfTheLineLeft();
         void moveForward();
         void turnLeft();
         void turnRight();
+        void hardTurnLeft();
+        void hardTurnRight();
         void stopMovement();
         void tankTurnLeft();
         void tankTurnRight();
         void skip();
         void backToMiddleLineRight();
         void backToMiddleLineLeft();
-        void setRealTime();
-        void getRealTime();
+        int count = 0;
+        send_mqtt("Zumo045/debug","toimii");
+        
 
         
         // Creating variables
         struct sensors_ ref;
         uint8 SW1_Read(void);
+        
 
         // Starting needed sensors
         reflectance_start();
@@ -130,15 +138,18 @@ void satunnais_kaannos();
                 }
                 
                 // Start of the line following
-                while(true){
-                
+                while(true){                    
                     reflectance_read(&ref);
                     printf(" _||_ %d, %d, %d, %d, %d, %d\n", ref.l3, ref.l2, ref.l1, ref.r1, ref.r2, ref.r3);
-                    
-                    if(isLineMiddle(ref)){
+                    if(isLineIntersection(ref)){
+                        if(count>=8){
+                            motor_forward(0,0);
+                            motor_stop();
+                        }else{
+                            moveForward();
+                            count++;}                        
+                    }else if(isLineMiddle(ref)){
                         moveForward();
-                    }else if(isLineIntersection(ref)){
-                        stopMovement();
                     }else if(isLineLittleRight(ref)){
                         backToMiddleLineRight();
                     }else if(isLineLittleLeft(ref)){
@@ -147,6 +158,14 @@ void satunnais_kaannos();
                         turnRight();
                     }else if(isLineMoreLeft(ref)){
                         turnLeft();
+                    }else if(isLineOnLeftEdge(ref)){
+                        hardTurnLeft();
+                    }else if(isLineOnRightEdge(ref)){
+                        hardTurnRight();
+                    }else if(endOfTheLineLeft(ref)){
+                        hardTurnLeft();
+                    }else if(endOfTheLineRight(ref)){
+                        hardTurnRight();
                     }
                 
                 }
@@ -164,12 +183,30 @@ bool isLineMiddle(struct sensors_ ref){
     
     return false;
 }
+bool isLineOnRightEdge(struct sensors_ ref){
+
+    // Lisää lisä ehto jos vain jompi kumpi palaa 
+    if(ref.r3 >= 10000 && ref.r1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r2 < 10000 && ref.l1 < 10000){
+        return true;
+    }
+    
+    return false;
+}
+bool isLineOnLeftEdge(struct sensors_ ref){
+
+    // Lisää lisä ehto jos vain jompi kumpi palaa 
+    if(ref.l3 >= 10000 && ref.r1 < 10000 && ref.l2 < 10000 && ref.l1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000){
+        return true;
+    }
+    
+    return false;
+}
 
 bool isLineIntersection(struct sensors_ ref){
     
     int average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
     
-    if(average >= 14000){
+    if(average >= 23000){
         return true;
     }
     
@@ -213,23 +250,80 @@ bool isLineMoreLeft(struct sensors_ ref){
     }
     return false;
 }
+bool endOfTheLineLeft(struct sensors_ ref){
+if(ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r3 < 10000 && ref.l1 >= 10000){
+        return true;
+    }
+    return false;
 
+}
+bool endOfTheLineRight(struct sensors_ ref){
+    
+    // Lisää lisä ehto jos vain jompi kumpi palaa 
+    if(ref.r2 >= 10000 && ref.r3 >= 10000 && ref.r1 >= 10000 && ref.l3 < 10000){
+        return true;
+    }
+    return false;
+}
 // bool isLineIntersectionCorner tarkoituksena on palata viivalle takaisin
 
+//void turnLeft(){
+//    motor_turn(30, 255, 0);
+//}
+//void hardTurnLeft(){
+//    motor_turn(0, 255, 0);
+//}
+//
+//void skip(){
+//    motor_forward(60, 200);
+//}
+//
+//void turnRight(){
+//    motor_turn(255, 30, 0);
+//}
+//void hardTurnRight(){
+//    motor_turn(255, 0, 0);
+//}
+//void backToMiddleLineRight(){
+//    motor_turn(255, 180, 0);
+//}
+//
+//void backToMiddleLineLeft(){
+//    motor_turn(180, 255, 0);
+//}
+//void moveForward(){
+//    motor_forward(255, 0);
+//}
+//
+//void stopMovement(){
+//    motor_forward(0, 0);
+//}
 void turnLeft(){
-    motor_turn(50, 100, 0);
+    motor_turn(40, 255, 0);
+}
+void hardTurnLeft(){
+    motor_turn(0, 255, 0);
 }
 
 void skip(){
-    motor_forward(60, 300);
+    motor_forward(60, 200);
 }
 
 void turnRight(){
-    motor_turn(100, 50, 0);
+    motor_turn(255, 40, 0);
+}
+void hardTurnRight(){
+    motor_turn(255, 0, 0);
+}
+void backToMiddleLineRight(){
+    motor_turn(180, 120, 0);
 }
 
+void backToMiddleLineLeft(){
+    motor_turn(120, 180, 0);
+}
 void moveForward(){
-    motor_forward(40, 0);
+    motor_forward(160, 0);
 }
 
 void stopMovement(){
@@ -270,13 +364,7 @@ void tankTurnRightExtreme(){
     vTaskDelay(250);
 }
 
-void backToMiddleLineRight(){
-    motor_turn(140, 50, 0);
-}
 
-void backToMiddleLineLeft(){
-    motor_turn(50, 140, 0);
-}
 
 void setRealTime(int hours, int minutes, int seconds){
 
@@ -776,6 +864,7 @@ int intersectionStop(struct sensors_ ref){
     printf("averaga is_ %d\n", average);
     
     if(average >= 12000){
+        motor_forward(100,100);
         motor_forward(0, 0);
         motor_stop();
         printf("inside %d\n", average);
@@ -948,7 +1037,7 @@ bool isLineMoreLeft(struct sensors_ ref){
 }
 
 void turnLeft(){
-    motor_turn(50, 100, 900);
+    motor_turn(20, 200, 0);
 }
 
 void skip(){
@@ -956,7 +1045,7 @@ void skip(){
 }
 
 void turnRight(){
-    motor_turn(100, 50, 900);
+    motor_turn(200, 20, 0);
 }
 
 void moveForward(){
@@ -1002,11 +1091,11 @@ void tankTurnRightExtreme(){
 }
 
 void backToMiddleLineRight(){
-    motor_turn(100, 50, 100);
+    motor_turn(150, 50, 0);
 }
 
 void backToMiddleLineLeft(){
-    motor_turn(50, 100, 100);
+    motor_turn(50, 150, 0);
 }
 
 
