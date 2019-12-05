@@ -64,22 +64,17 @@ void satunnais_kaannos();
         void tankTurnLeft();
         void turnLeft();
         motor_start();
-        tankTurnLeft();
-        //turnLeft();
+
+        
+        while(true){
+            
+        }
+        
+        
         motor_forward(0,0);
     }
     
-void tankTurnLeft(){
-    MotorDirLeft_Write(1);      // set LeftMotor backward mode
-    MotorDirRight_Write(0);     // set RightMotor forward mode
-    PWM_WriteCompare1(100); 
-    PWM_WriteCompare2(100); 
-    vTaskDelay(900);
-}
 
-void turnLeft(){
-    motor_turn(0, 100, 1200);
-}
     
 #endif
 
@@ -102,6 +97,8 @@ void turnLeft(){
         void skip();
         void backToMiddleLineRight();
         void backToMiddleLineLeft();
+        void setRealTime();
+        void getRealTime();
 
         
         // Creating variables
@@ -279,6 +276,33 @@ void backToMiddleLineRight(){
 
 void backToMiddleLineLeft(){
     motor_turn(50, 140, 0);
+}
+
+void setRealTime(int hours, int minutes, int seconds){
+
+    RTC_Start();
+    
+    RTC_TIME_DATE now;
+    now.DayOfYear = 2019;
+    now.DayOfMonth = 12;
+    now.DayOfWeek = 51;
+    now.Hour = hours;
+    now.Min = minutes;
+    now.Sec = seconds;
+    
+    RTC_WriteTime(&now);
+    
+}
+
+void getRealTime(){
+    RTC_TIME_DATE now;
+    RTC_DisableInt();
+    now = *RTC_ReadTime();
+    RTC_EnableInt();
+    
+    //print the current time
+    printf("%2d:%02d.%02d\n", now.Hour, now.Min, now.Sec);
+    
 }
 
 
