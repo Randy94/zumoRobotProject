@@ -93,6 +93,10 @@ void satunnais_kaannos();
       void hardTurnRight();
       void moveForward();
       void goBack;
+      void skip();
+      void stopMovement();
+    
+    
     
     //variables
     struct sensors_ ref;
@@ -228,7 +232,12 @@ void satunnais_kaannos();
         motor_forward(0, 0);
         motor_backward(100, 0);                
             
-    
+    void skip(){
+    motor_forward(60, 200);
+    }
+    void stopMovement(){
+    motor_forward(0, 0);
+    }
     
 }
 
