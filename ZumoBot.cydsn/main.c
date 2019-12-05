@@ -82,8 +82,164 @@ void turnLeft(){
 }
     
 #endif
-
 #if 1
+    void zmain(void)
+    {
+        
+        
+    // methods
+      bool isLineMiddle();
+      bool isLineIntersection();
+      bool isLineLittleRight();
+      bool isLineLittleLeft();
+      void backToMiddleLineRight();
+      void backToMiddleLineLeft();
+      void hardTurnLeft();
+      void hardTurnRight();
+      void moveForward();
+      void goBack;
+    
+    //variables
+    struct sensors_ ref;
+    uint8 SW1_Read(void);
+    int xcount = 0;
+    int ycount = 0;
+    
+    
+    //starting sensors
+    reflectance_start();
+    motor_start();
+    IR_Start();
+    Ultra_Start();
+    
+    
+    
+    //main while loop
+    while(true){
+            if(SW1_Read() == 0){
+                
+                // Loop to the first intersectio waiting for IR Signal!
+                while(true){
+                    reflectance_read(&ref);
+                    motor_forward(50, 10);
+                    if(isLineIntersection(ref)){
+                        skip();
+                        stopMovement();
+                        IR_flush();
+                        IR_wait();
+                        break;
+                    }
+                }
+    
+                // Line following
+                
+                if(isLineIntersection(ref)){                        
+                    }else if(isLineMiddle(ref)){
+                        moveForward();
+                    }else if(isLineLittleRight(ref)){
+                        backToMiddleLineRight();
+                    }else if(isLineLittleLeft(ref)){
+                        backToMiddleLineLeft();
+                    
+                    
+                
+                
+                
+                
+                
+                
+    }
+    
+    
+    bool objectAhead(){
+    
+    if(Ultra_GetDistance() <= 10){
+    return true;
+    }
+    return false;  
+    }
+    
+    
+    
+}
+    bool isLineIntersection(struct sensors_ ref){
+    
+    int average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
+    
+    if(average >= 14000){
+        return true;
+    }
+    
+    return false;
+}
+    
+    bool isLineMiddle(struct sensors_ ref){
+
+    // Lisää lisä ehto jos vain jompi kumpi palaa 
+    if(ref.l1 >= 10000 && ref.r1 >= 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r2 < 10000 && ref.r3 < 10000){
+        return true;
+    }
+    
+    return false;
+}
+
+
+    bool isLineLittleRight(struct sensors_ ref){
+    
+    // Lisää lisä ehto jos vain jompi kumpi palaa 
+    if(ref.r1 >= 10000 && ref.r2 >= 10000 && ref.l1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r3 < 10000 ){
+        return true;
+    }
+    
+    return false;
+}
+
+    bool isLineLittleLeft(struct sensors_ ref){
+    
+    // Lisää lisä ehto jos vain jompi kumpi palaa 
+    if(ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 < 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
+        return true;
+    }
+    
+    return false;
+}
+    bool isLineIntersection(struct sensors_ ref){
+    
+    int average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
+    
+    if(average >= 14000){
+        return true;
+    }
+    
+    return false;
+}
+    
+    void moveForward(){
+        motor_forward(255, 0);
+    } 
+    void hardTurnLeft(){
+        motor_turn(0, 240, 0);
+    }
+    void hardTurnRight(){
+        motor_turn(240, 0, 0);
+    }
+    void backToMiddleLineRight(){
+        motor_turn(255, 200, 0);
+    }
+    void backToMiddleLineLeft(){
+        motor_turn(200, 255, 0);
+    }
+    void goBack(){
+        motor_forward(0, 0);
+        motor_backward(100, 0);                
+            
+    
+    
+}
+
+#endif
+
+#if 0
     void zmain(void)
     {
         // Initializing methods
