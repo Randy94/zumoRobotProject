@@ -57,44 +57,53 @@ void satunnais_kaannos();
  * @details  ** Enable global interrupt since Zumo library uses interrupts. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
 
-#if 0
+#if 1
     
     void zmain(void)
     {
         void tankTurnLeft();
         void turnLeft();
         motor_start();
-
+        void tankTurnRightExtreme();
         
-        while(true){
-            
-        }
+        tankTurnRightExtreme();
         
         
         motor_forward(0,0);
     }
     
+    void tankTurnRightExtreme(){
+    MotorDirLeft_Write(0);      // set LeftMotor backward mode
+    MotorDirRight_Write(1);     // set RightMotor forward mode
+    PWM_WriteCompare1(250); 
+    PWM_WriteCompare2(250); 
+    vTaskDelay(420);
+}
 
     
 #endif
-#if 1
+
+#if 0
     void zmain(void)
     {
         
         
     // methods
-      bool isLineMiddle();
-      bool isLineIntersection();
-      bool isLineLittleRight();
-      bool isLineLittleLeft();
-      void backToMiddleLineRight();
-      void backToMiddleLineLeft();
-      void hardTurnLeft();
-      void hardTurnRight();
-      void moveForward();
-      void goBack();
-      void skip();
-      void stopMovement();
+    bool isLineMiddle();
+    bool isLineIntersection();
+    bool isLineLittleRight();
+    bool isLineLittleLeft();
+    bool objectAhead();
+    void backToMiddleLineRight();
+    void backToMiddleLineLeft();
+    void hardTurnLeft();
+    void hardTurnRight();
+    void tankTurnLeft();
+    void tankTurnRight();
+    void moveForward();
+    void goBack();
+    void skip();
+    void stopMovement();
     
     
     
@@ -102,7 +111,7 @@ void satunnais_kaannos();
     struct sensors_ ref;
     uint8 SW1_Read(void);
     int xcount = 0;
-    int ycount = 0;
+    //int ycount = 0;
     
     
     //starting sensors
@@ -129,17 +138,52 @@ void satunnais_kaannos();
                         break;
                     }
                 }
-    
+            
+            
+        
                 // Line following
-                
-                if(isLineIntersection(ref)){                        
-                    }else if(isLineMiddle(ref)){
+                while(true){
+                    
+                reflectance_read(&ref);
+                if(isLineMiddle(ref)){
                         moveForward();
+                        if(objectAhead()){
+                            while(true){
+                                goBack();
+                                reflectance_read(&ref);
+                                if(isLineIntersection()){
+                                    stopMovement();
+                                    tankTurnRight();
+                                    while(true){
+                                        moveForward();
+                                        reflectance_read(&ref);
+                                        if(isLineIntersection()){
+                                            tankTurnLeft();
+                                            xcount++;
+                                            break;
+                                        }
+                                    }
+                                    
+                                }else if(isLineIntersection() && xcount == 3){
+                                    stopMovement();
+                                    tankTurnLeft();
+                                    while(true){
+                                        moveForward();
+                                        if(isLineIntersection()){
+                                            tankTurnRight();
+                                            xcount--;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }else if(isLineLittleRight(ref)){
                         backToMiddleLineRight();
                     }else if(isLineLittleLeft(ref)){
                         backToMiddleLineLeft();
                     }
+                }
             }
         }
     }
@@ -147,7 +191,7 @@ void satunnais_kaannos();
     
     bool objectAhead(){
     
-    if(Ultra_GetDistance() <= 10){
+    if(Ultra_GetDistance() <= 5){
     return true;
     }
     return false;  
@@ -199,7 +243,7 @@ void satunnais_kaannos();
 }
     
     void moveForward(){
-        motor_forward(255, 0);
+        motor_forward(100, 0);
     }
     
     void hardTurnLeft(){
@@ -219,7 +263,6 @@ void satunnais_kaannos();
     }
     
     void goBack(){
-        motor_forward(0, 0);
         motor_backward(100, 0);                        
     }
     
@@ -230,6 +273,24 @@ void satunnais_kaannos();
     void stopMovement(){
     motor_forward(0, 0);
     }
+
+    void tankTurnLeft(){
+    MotorDirLeft_Write(1);      // set LeftMotor backward mode
+    MotorDirRight_Write(0);     // set RightMotor forward mode
+    PWM_WriteCompare1(100); 
+    PWM_WriteCompare2(100); 
+    vTaskDelay(800);
+    MotorDirLeft_Write(0);
+}
+
+void tankTurnRight(){
+    MotorDirLeft_Write(0);      // set LeftMotor backward mode
+    MotorDirRight_Write(1);     // set RightMotor forward mode
+    PWM_WriteCompare1(100); 
+    PWM_WriteCompare2(100); 
+    vTaskDelay(800);
+    MotorDirRight_Write(0);
+}
     
 
 
