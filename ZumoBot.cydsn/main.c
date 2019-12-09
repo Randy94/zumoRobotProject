@@ -57,27 +57,80 @@ void satunnais_kaannos();
  * @details  ** Enable global interrupt since Zumo library uses interrupts. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
 
-#if 1
+#if 0
     
     void zmain(void)
     {
         void tankTurnLeft();
         void turnLeft();
         motor_start();
-        void tankTurnRightExtreme();
-        
-        tankTurnRightExtreme();
-        
+        void mazeTurnRight();
+        void tankTurnRight();
+        void tankTurnLeft();
+        void moveForward();
+        void skip();
+        bool isLineIntersection();
+        reflectance_start();
+
+        mazeTurnRight();
         
         motor_forward(0,0);
     }
     
-    void tankTurnRightExtreme(){
+
+
+    void tankTurnLeft(){
+    MotorDirLeft_Write(1);      // set LeftMotor backward mode
+    MotorDirRight_Write(0);     // set RightMotor forward mode
+    PWM_WriteCompare1(100); 
+    PWM_WriteCompare2(100); 
+    vTaskDelay(710);
+    MotorDirLeft_Write(0);
+}
+
+void tankTurnRight(){
     MotorDirLeft_Write(0);      // set LeftMotor backward mode
     MotorDirRight_Write(1);     // set RightMotor forward mode
-    PWM_WriteCompare1(250); 
-    PWM_WriteCompare2(250); 
-    vTaskDelay(420);
+    PWM_WriteCompare1(100); 
+    PWM_WriteCompare2(100); 
+    vTaskDelay(730);
+    MotorDirRight_Write(0);
+}
+
+    void skip(){
+    motor_forward(60, 300);
+    }
+    
+        void moveForward(){
+        motor_forward(50, 0);
+    }
+        
+        bool isLineIntersection(struct sensors_ ref){
+    
+    int average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
+    
+    if(average >= 14000){
+        return true;
+    }
+    
+    return false;
+}
+        
+    void mazeTurnRight(){
+    
+    struct sensors_ ref;
+    
+    tankTurnRight();
+    while(true){
+        reflectance_read(&ref);
+        moveForward();
+        if(isLineIntersection(ref)){
+            skip();
+            break;
+        }
+    }
+    tankTurnLeft();
+    skip();
 }
 
     
@@ -104,6 +157,8 @@ void satunnais_kaannos();
     void goBack();
     void skip();
     void stopMovement();
+    void mazeTurnRight();
+    void mazeTurnLeft();
     
     
     
@@ -143,46 +198,48 @@ void satunnais_kaannos();
         
                 // Line following
                 while(true){
-                    
                 reflectance_read(&ref);
                 if(isLineMiddle(ref)){
-                        moveForward();
-                        if(objectAhead()){
-                            while(true){
-                                goBack();
-                                reflectance_read(&ref);
-                                if(isLineIntersection()){
-                                    stopMovement();
-                                    tankTurnRight();
-                                    while(true){
-                                        moveForward();
-                                        reflectance_read(&ref);
-                                        if(isLineIntersection()){
-                                            tankTurnLeft();
-                                            xcount++;
-                                            break;
-                                        }
-                                    }
-                                    
-                                }else if(isLineIntersection() && xcount == 3){
-                                    stopMovement();
-                                    tankTurnLeft();
-                                    while(true){
-                                        moveForward();
-                                        if(isLineIntersection()){
-                                            tankTurnRight();
-                                            xcount--;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }else if(isLineLittleRight(ref)){
-                        backToMiddleLineRight();
-                    }else if(isLineLittleLeft(ref)){
-                        backToMiddleLineLeft();
+                    moveForward();
+                }else if(isLineLittleRight(ref)){
+                    backToMiddleLineRight();
+                }else if(isLineLittleLeft(ref)){
+                    backToMiddleLineLeft();
                     }
+                
+                if(objectAhead() && xcount >= 0){
+                    xcount++;
+                    printf("asdasd----------------------\n");
+                    while(true){
+                        moveForward();
+                        if(isLineIntersection()){
+                            break;
+                        }
+                    }
+                    mazeTurnRight();
+                }else if(objectAhead() && xcount == 3){
+                    // Tästä lähtee vetään vasemmalle kunnes ei ole estettä edessä
+                    while(true){
+                        xcount--;
+                        mazeTurnLeft();
+                        if(objectAhead()){
+                            break;
+                        }
+                    }
+                }else if(objectAhead() && xcount < 0){
+                    xcount--;
+                    mazeTurnLeft();
+                }else if(objectAhead() && xcount == -3){
+                    // Tästä lähtee oikealle kunnse ei ole estettä edessä
+                    while(true){
+                        xcount++;
+                        mazeTurnRight();
+                        if(objectAhead()){
+                            break;
+                        }
+                    }
+                }
+                
                 }
             }
         }
@@ -191,7 +248,7 @@ void satunnais_kaannos();
     
     bool objectAhead(){
     
-    if(Ultra_GetDistance() <= 5){
+    if(Ultra_GetDistance() <= 15){
     return true;
     }
     return false;  
@@ -243,7 +300,7 @@ void satunnais_kaannos();
 }
     
     void moveForward(){
-        motor_forward(100, 0);
+        motor_forward(50, 0);
     }
     
     void hardTurnLeft(){
@@ -255,11 +312,11 @@ void satunnais_kaannos();
     }
     
     void backToMiddleLineRight(){
-        motor_turn(255, 200, 0);
+        motor_turn(50, 30, 0);
     }
     
     void backToMiddleLineLeft(){
-        motor_turn(200, 255, 0);
+        motor_turn(30, 50, 0);
     }
     
     void goBack(){
@@ -267,7 +324,7 @@ void satunnais_kaannos();
     }
     
     void skip(){
-    motor_forward(60, 200);
+    motor_forward(60, 300);
     }
     
     void stopMovement(){
@@ -279,7 +336,7 @@ void satunnais_kaannos();
     MotorDirRight_Write(0);     // set RightMotor forward mode
     PWM_WriteCompare1(100); 
     PWM_WriteCompare2(100); 
-    vTaskDelay(800);
+    vTaskDelay(710);
     MotorDirLeft_Write(0);
 }
 
@@ -288,8 +345,47 @@ void tankTurnRight(){
     MotorDirRight_Write(1);     // set RightMotor forward mode
     PWM_WriteCompare1(100); 
     PWM_WriteCompare2(100); 
-    vTaskDelay(800);
+    vTaskDelay(730);
     MotorDirRight_Write(0);
+}
+
+void checkForObstacle(){
+    
+
+}
+
+void mazeTurnRight(){
+    
+    struct sensors_ ref;
+    
+    tankTurnRight();
+    while(true){
+        reflectance_read(&ref);
+        moveForward();
+        if(isLineIntersection(ref)){
+            skip();
+            break;
+        }
+    }
+    tankTurnLeft();
+    skip();
+}
+
+void mazeTurnLeft(){
+    
+    struct sensors_ ref;
+    
+    tankTurnLeft();
+    while(true){
+        reflectance_read(&ref);
+        moveForward();
+        if(isLineIntersection(ref)){
+            skip();
+            break;
+        }
+    }
+    tankTurnRight();
+    skip();
 }
     
 
