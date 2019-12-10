@@ -56,55 +56,100 @@
  * @details  ** Enable global interrupt since Zumo library uses interrupts. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
 
-#if 0
+#if 1
+    struct accData_ data;
     
+
     void zmain(void)
     {
-        void tankTurnLeft();
-        void turnLeft();
-        motor_start();
-        void mazeTurnRight();
-        void tankTurnRight();
-        void tankTurnLeft();
-        void moveForward();
-        void skip();
+        bool objectAhead();
         bool isLineIntersection();
+        bool isThereLine();
+        void stopMovement();
+        void moveBackward();
+        void moveForward();
+        void hunt();
+        
+        struct accData_ data;        
+        struct sensors_ ref;
+        uint8 SW1_Read(void);
+        
         reflectance_start();
-
-        mazeTurnRight();
+        motor_start();
+        IR_Start();
+        Ultra_Start();
+        LSM303D_Start();
+      while(true){
+            if(SW1_Read() == 0){
+                
+                // Loop to the first intersectio waiting for IR Signal!
+                while(true){
+                    reflectance_read(&ref);
+                    motor_forward(50, 10);
+                    if(isLineIntersection(ref)){                        
+                        stopMovement();
+                        IR_flush();
+                        IR_wait();
+                        motor_forward(255,800);
+                        motor_forward(0,0);
+                        break;
+                    }
+                    
+                }
+                
+            
+            
         
-        motor_forward(0,0);
+        while(true){
+            LSM303D_Read_Acc(&data);
+            if(objectAhead()){
+                if(isThereLine()){
+                motor_forward(0,0);
+                moveBackward();
+                }else{
+                moveForward();}
+            }//else if(bump){
+            
+          //  }
+            
+            else{
+                hunt();
+            }
+        
+            }
+        
+        }
+    }     
+        
+        
+        
+        
+        
+        
+        
+        }
+    void hunt(){
+    motor_turn(150,0,0);
+    
+    }
+    void moveForward(){
+    motor_forward(255,0);
+    }
+    void moveBackward(){
+        motor_backward(250,800);
+    }
+    void stopMovement(){
+    motor_forward(0, 0);
+    }
+    bool objectAhead(){
+    
+    if(Ultra_GetDistance() <= 10){
+    return true;
+    }
+    return false;  
     }
     
-
-
-    void tankTurnLeft(){
-    MotorDirLeft_Write(1);      // set LeftMotor backward mode
-    MotorDirRight_Write(0);     // set RightMotor forward mode
-    PWM_WriteCompare1(100); 
-    PWM_WriteCompare2(100); 
-    vTaskDelay(710);
-    MotorDirLeft_Write(0);
-}
-
-void tankTurnRight(){
-    MotorDirLeft_Write(0);      // set LeftMotor backward mode
-    MotorDirRight_Write(1);     // set RightMotor forward mode
-    PWM_WriteCompare1(100); 
-    PWM_WriteCompare2(100); 
-    vTaskDelay(730);
-    MotorDirRight_Write(0);
-}
-
-    void skip(){
-    motor_forward(60, 300);
-    }
-    
-        void moveForward(){
-        motor_forward(50, 0);
-    }
-        
-        bool isLineIntersection(struct sensors_ ref){
+    bool isLineIntersection(struct sensors_ ref){
     
     int average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
     
@@ -113,24 +158,15 @@ void tankTurnRight(){
     }
     
     return false;
-}
-        
-    void mazeTurnRight(){
-    
-    struct sensors_ ref;
-    
-    tankTurnRight();
-    while(true){
-        reflectance_read(&ref);
-        moveForward();
-        if(isLineIntersection(ref)){
-            skip();
-            break;
-        }
     }
-    tankTurnLeft();
-    skip();
-}
+    bool isThereLine(struct sensors_ ref){
+    
+    if(ref.r1 >= 10000 || ref.r2 >= 10000 || ref.l1 >= 10000 || ref.l2 >= 10000 || ref.l3 >= 10000 || ref.r3 >= 10000 ){
+        return true;
+    } return false;}
+    bool bump(struct accData_data){
+    }
+
 
     
 #endif
@@ -1014,6 +1050,7 @@ void zmain(void)
 void zmain(void)
 {
     struct accData_ data;
+    
 
         while(true){
     
