@@ -49,7 +49,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-void satunnais_kaannos();
 
 /**
  * @file    main.c
@@ -1516,28 +1515,179 @@ void zmain(void)
 #endif    
 
 #if 0
-// MQTT test
+// 5.1 Assignment
 void zmain(void)
 {
-    int ctr = 0;
 
-    printf("\nBoot\n");
-    send_mqtt("Zumo01/debug", "Boot");
+    RTC_TIME_DATE setRealTime();
+    RTC_Start();
+    
+    int hours, minutes;
+    uint8 SW1_Read(void);
+    RTC_TIME_DATE now;
+    
+    vTaskDelay(10000);
+    printf("Give current time.\n");
+    printf("Hours: \n");
+    scanf("%d", &hours);
+    printf("Minutes: \n");
+    scanf("%d", &minutes);
 
-    //BatteryLed_Write(1); // Switch led on 
-    BatteryLed_Write(0); // Switch led off 
-
+    now.Hour = hours;
+    now.Min = minutes;
+    
+    RTC_WriteTime(&now);
+    
     while(true)
     {
-        printf("Ctr: %d, Button: %d\n", ctr, SW1_Read());
-        print_mqtt("Zumo01/debug", "Ctr: %d, Button: %d", ctr, SW1_Read());
 
-        vTaskDelay(1000);
-        ctr++;
+        if(SW1_Read() == 0){
+            
+            RTC_DisableInt(); /* Disable Interrupt of RTC Component */
+            now = *RTC_ReadTime(); /* copy the current time to a local variable */
+            RTC_EnableInt(); /* Enable Interrupt of RTC Component */
+            
+            print_mqtt("Zumo045/"," Time is %d:%d\n", now.Hour, now.Min);
+            
+             // wait until button is released
+            while(SW1_Read() == 0) vTaskDelay(50);
+        }
+        
+
     }
- }   
+ }
+
+
+
 #endif
 
+#if 0
+// 5.2 Assigment
+void zmain(void)
+{
+    void satunnais_kaannos();
+    motor_start();
+    Ultra_Start();
+    
+    while(true){
+    
+        while(true){
+            if(SW1_Read() == 0){
+                break;
+            }
+        }
+        
+        while(true){
+
+            motor_forward(100, 0);
+            
+            if(Ultra_GetDistance() <= 20){
+                motor_backward(200, 1000);
+                satunnais_kaannos();
+            }  
+
+        }
+
+        // Fail safe to motor stop
+        motor_forward(0, 0);
+        motor_stop();
+        break;
+        
+    }
+        while(true){
+            vTaskDelay(100); // sleep (in an infinite loop)
+        }
+    
+}
+
+void satunnais_kaannos(){
+    
+                int random_n = rand() % 2;
+                
+                if(random_n == 1){
+                    motor_turn(0, 200, 400);
+                    print_mqtt("Zumo045/ ","turn right");
+                }else{
+                    motor_turn(200, 0, 400);
+                    print_mqtt("Zumo045/ ","turn left");
+                }
+                
+
+}
+
+#endif
+
+#if 1
+    // Assignment 5.3
+    void zmain(){
+    
+        // Aloitus statementit
+        motor_start();
+        IR_Start();
+        reflectance_start();
+        
+        struct sensors_ ref;
+        TickType_t start;
+        TickType_t end;
+        
+        bool isLineIntersection();
+        
+        // Start shit at button press
+        while(true){
+            if(SW1_Read() == 0){
+                break;
+            }
+        }
+        
+        while(true){
+            reflectance_read(&ref);
+            motor_forward(100, 0);
+            printf("%5d %5d %5d %5d %5d %5d\r\n", ref.l3, ref.l2, ref.l1, ref.r1, ref.r2, ref.r3); 
+            if(isLineIntersection(ref)){
+                motor_forward(60, 300);
+                motor_forward(0, 0);
+                IR_flush();
+                IR_wait();
+                // Tähän tickcoutn start
+                start = xTaskGetTickCount();
+                break;
+            }
+            
+        }
+        
+        // Main loop
+        while(true){
+            reflectance_read(&ref);
+            motor_forward(100, 0);
+            
+            if(isLineIntersection(ref)){
+                // Tähän tickount stop
+                end = xTaskGetTickCount();
+                motor_forward(0, 0);
+                motor_stop();
+                print_mqtt("Zumo045/","lap %d", end - start);
+                break;
+            }
+            
+        }
+        
+        while(true){
+            vTaskDelay(100); // sleep (in an infinite loop)
+        }
+    
+    }
+    
+    bool isLineIntersection(struct sensors_ ref){
+    
+    int average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
+    if(average >= 14000){
+        return true;
+    }
+    
+    return false;
+}
+    
+#endif
 
 #if 0
 void zmain(void)
