@@ -64,7 +64,7 @@
         bool isLineIntersection();
         bool isThereLine();
         void stopMovement();
-        void moveBackward();
+        void moveBack();
         void moveForward();
         void hunt();
         
@@ -102,21 +102,21 @@
         
         while(true){
             LSM303D_Read_Acc(&data);
-            if(objectAhead()){
-                while(true){
-                    moveForward();
-                    if(isLineIntersection()){
-                        motor_forward(0,0);
-                        moveBackward();
-                        break;
-                    }
+            reflectance_read(&ref);
+            if(objectAhead()){                
+                if(isThereLine(ref)){
+                motor_forward(0,0);
+                moveBack();
+                }else{
+                moveForward();
                 }
-            }//else if(bump){
-            
-          //  }
-            
-            else{
+            }else{
+                if(isThereLine(ref)){
+                    motor_forward(0,0);
+                    moveBack();
+                }else{                   
                 hunt();
+                }
             }
         
             }
@@ -134,21 +134,25 @@
         
         
     void hunt(){
-    motor_turn(150,0,0);
+    motor_turn(255,0,0);
     
     }
     void moveForward(){
     motor_forward(255,0);
     }
-    void moveBackward(){
-        motor_backward(250,800);
+    void moveBack(){
+    MotorDirLeft_Write(0);      // set LeftMotor backward mode
+    MotorDirRight_Write(1);     // set RightMotor forward mode
+    PWM_WriteCompare1(250); 
+    PWM_WriteCompare2(250); 
+    motor_forward(255,0);
     }
     void stopMovement(){
     motor_forward(0, 0);
     }
     bool objectAhead(){
     
-    if(Ultra_GetDistance() <= 10){
+    if(Ultra_GetDistance() <= 20){
     return true;
     }
     return false;  
@@ -158,22 +162,20 @@
     
     int average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
     
-    if(average >= 10000){
+    if(average >= 18000){
         return true;
+    printf("%d/n",average);
     }
     
     return false;
     }
     bool isThereLine(struct sensors_ ref){
     
-    if(ref.r1 >= 10000 || ref.r2 >= 10000 || ref.l1 >= 10000 || ref.l2 >= 10000 || ref.l3 >= 10000 || ref.r3 >= 10000 ){
+    if(ref.r1 >= 10000 && ref.r2 >= 10000 && ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r3 >= 10000 ){
         return true;
-    } 
-        return false;
-    }
-    
-//    bool bump(struct accData_data){
-//    }
+    } return false;}
+    //bool bump(struct accData_data){
+    //}
 
 
     
