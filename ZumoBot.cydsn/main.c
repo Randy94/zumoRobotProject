@@ -57,6 +57,7 @@
 */
 
 #if 1
+<<<<<<< HEAD
     void zmain(void){
     void tankTurnLeft();
     void tankTurnRight();    
@@ -124,6 +125,31 @@
 
 
 
+=======
+    
+    void zmain(){
+    
+
+        struct accData_ data;
+        
+        if(!LSM303D_Start()){
+             printf("LSM303D failed to initialize!!! Program is Ending!!!\n");
+            while(1) vTaskDelay(10); 
+        }else{
+             printf("Device Ok...\n"); 
+        }
+        
+        while(true){
+            LSM303D_Read_Acc(&data); 
+            printf("x %10d y %10d z %10d\n",data.accX, data.accY, data.accZ);
+            vTaskDelay(100);
+        }
+        
+    }
+    
+#endif
+
+>>>>>>> 806aeb7644658a360a82426ce36cedda32821b1b
 #if 0
     // Sumo botti
     void zmain(void)
@@ -306,6 +332,8 @@
     bool isLineLittleRight();
     bool isLineLittleLeft();
     bool objectAhead();
+    bool isLineMoreRight();
+    bool isLineMoreLeft();
     void backToMiddleLineRight();
     void backToMiddleLineLeft();
     void hardTurnLeft();
@@ -357,57 +385,59 @@
         
                 // Main loop
                 while(true){
-                    
                     reflectance_read(&ref);
-                    // Basic Midlle Line following
-                    if(isLineMiddle(ref)){
-                        moveForward();
-                    }else if(isLineLittleRight(ref)){
-                        backToMiddleLineRight();
-                    }else if(isLineLittleLeft(ref)){
-                        backToMiddleLineLeft();
-                    }else if(isLineIntersection(ref)){
+                    
+                    if(isLineIntersection(ref)){
                         ycount++;
-                        print_mqtt("Zumo045/position y", "%d", ycount);
-                    }
+                        if(objectAhead() && xcount>=0){
+                            if(xcount==3){
+                                while(true){
+                                    if (xcount >=0){                                    
+                                    mazeTurnLeft();
+                                    xcount--;
+                                    }else{
+                                    break;
+                                    }
+                                    }
+                                }else{                        
+                                mazeTurnRight();
+                                xcount++;
+                        }
+                        }else if(objectAhead() && xcount<0 ){
+                            if(xcount==-3){
+                            while(true){
+                                    if (xcount < 0){
+                                    mazeTurnRight();
+                                    xcount++;
+                                    }else{
+                                    break;
+                                    }
+                                    }
+                            }else{
+                            mazeTurnLeft();
+                            xcount--;
+                            }
+                            
+                        }
+                        
+ 
+
                 
-                // Here do the checking if there is a abject ahead make the right turn
-                if(objectAhead() && xcount >= 0){
-                    xcount++;
-                    print_mqtt("Zumo045/position X", "%d", xcount);
-                    while(true){
+                    }else{
+                
+                    // Basic Midlle Line following
+                        if(isLineMiddle(ref)){
                         moveForward();
-                        if(isLineIntersection(ref)){
-                            ycount++;
-                            print_mqtt("Zumo045/position y", "%d", ycount);
-                            break;
+                        }else if(isLineLittleRight(ref)){
+                        backToMiddleLineRight();
+                        }else if(isLineLittleLeft(ref)){
+                        backToMiddleLineLeft();
+                        }else if(isLineMoreLeft(ref)){
+                         hardTurnLeft();
+                        }else if(isLineMoreRight(ref)){
+                         hardTurnRight();
                         }
                     }
-                    mazeTurnRight();
-                // Here if the x is equal to 3 we do left turns untill there is no object ahead.
-                }else if(objectAhead() && xcount == 3){
-                    while(true){
-                        xcount--;
-                        print_mqtt("Zumo045/position X", "%d", xcount);
-                        mazeTurnLeft();
-                        if(!objectAhead()){
-                            break;
-                        }
-                    }
-                // If the x is bellow 0 and we have object ahead we go left
-                }else if(objectAhead() && xcount < 0){
-                    xcount--;
-                    mazeTurnLeft();
-                // Here if the x is equal to 3 we do right turns untill there is no object ahead.
-                }else if(objectAhead() && xcount == -3){
-                    while(true){
-                        xcount++;
-                        mazeTurnRight();
-                        if(!objectAhead()){
-                            break;
-                        }
-                    }
-                }
                 
                 }
             }
@@ -416,6 +446,272 @@
     
     
     bool objectAhead(){
+    
+    if(Ultra_GetDistance() <= 15){
+        return true;
+    }
+        return false;  
+    }
+    
+    
+    
+
+    bool isLineIntersection(struct sensors_ ref){
+    
+    int average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
+    
+    if(average >= 14000){
+        return true;
+    }
+    
+    return false;
+}
+    
+    bool isLineMiddle(struct sensors_ ref){
+
+    // Lisää lisä ehto jos vain jompi kumpi palaa 
+    if(ref.l1 >= 10000 && ref.r1 >= 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r2 < 10000 && ref.r3 < 10000){
+        return true;
+    }
+    
+    return false;
+}
+
+
+    bool isLineLittleRight(struct sensors_ ref){
+    
+    // Lisää lisä ehto jos vain jompi kumpi palaa 
+    if(ref.r1 >= 10000 && ref.r2 >= 10000 && ref.l1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r3 < 10000 ){
+        return true;
+    }
+    
+    return false;
+}
+
+    bool isLineLittleLeft(struct sensors_ ref){
+    
+    // Lisää lisä ehto jos vain jompi kumpi palaa 
+    if(ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 < 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
+        return true;
+    }
+    
+    return false;
+}
+    bool isLineMoreRight(struct sensors_ ref){
+    
+    // Lisää lisä ehto jos vain jompi kumpi palaa 
+    if(ref.r2 >= 10000 && ref.r3 >= 10000 && ref.r1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.l1 < 10000){
+        return true;
+    }
+    return false;
+}
+
+bool isLineMoreLeft(struct sensors_ ref){
+    
+    // Lisää lisä ehto jos vain jompi kumpi palaa 
+    if(ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 && ref.l1 < 10000){
+        return true;
+    }
+    return false;
+}
+    
+    void moveForward(){
+        motor_forward(50, 0);
+    }
+    
+    void hardTurnLeft(){
+        motor_turn(30, 80, 0);
+    }
+    
+    void hardTurnRight(){
+        motor_turn(80, 30, 0);
+    }
+    
+    void backToMiddleLineRight(){
+        motor_turn(50, 30, 0);
+    }
+    
+    void backToMiddleLineLeft(){
+        motor_turn(30, 50, 0);
+    }
+    
+    void goBack(){
+        motor_backward(100, 0);                        
+    }
+    
+    void skip(){
+    motor_forward(60, 350);
+    }
+    
+    void stopMovement(){
+    motor_forward(0, 0);
+    }
+
+    void tankTurnLeft(){
+    MotorDirLeft_Write(1);      // set LeftMotor backward mode
+    MotorDirRight_Write(0);     // set RightMotor forward mode
+    PWM_WriteCompare1(100); 
+    PWM_WriteCompare2(100); 
+    vTaskDelay(550);
+    MotorDirLeft_Write(0);
+}
+
+void tankTurnRight(){
+    MotorDirLeft_Write(0);      // set LeftMotor backward mode
+    MotorDirRight_Write(1);     // set RightMotor forward mode
+    PWM_WriteCompare1(100); 
+    PWM_WriteCompare2(100); 
+    vTaskDelay(550);
+    MotorDirRight_Write(0);
+}
+
+void checkForObstacle(){
+    
+
+}
+
+void mazeTurnRight(){
+    
+    struct sensors_ ref;
+    skip();
+    tankTurnRight();
+        if(objectAhead()){
+            tankTurnLeft();
+            tankTurnLeft();
+    }else{
+    while(true){
+        reflectance_read(&ref);
+        moveForward();
+        if(isLineIntersection(ref)){
+            
+            skip();
+            break;
+        }
+    }
+    
+    tankTurnLeft();
+    if(objectAhead()){
+        mazeTurnRight();
+    }else{
+    skip();
+    }
+    
+}
+}
+void mazeTurnLeft(){
+    
+    struct sensors_ ref;
+    skip();
+    tankTurnLeft();
+    if(objectAhead()){
+        tankTurnRight();
+        tankTurnRight();
+    }else{
+    while(true){
+        reflectance_read(&ref);
+        moveForward();
+        if(isLineIntersection(ref)){
+            skip();
+            break;
+        }   
+    }
+    tankTurnRight();
+    if(objectAhead()){
+    mazeTurnLeft();
+    }else{
+    skip();}
+    }
+}
+    
+
+
+#endif
+
+#if 0
+    
+    void zmain(void)
+    {
+    
+    // methods
+    bool isLineMiddle();
+    bool isLineIntersection();
+    bool isLineLittleRight();
+    bool isLineLittleLeft();
+    bool objectAhead();
+    void backToMiddleLineRight();
+    void backToMiddleLineLeft();
+    void hardTurnLeft();
+    void hardTurnRight();
+    void tankTurnLeft();
+    void tankTurnRight();
+    void moveForward();
+    void goBack();
+    void skip();
+    void stopMovement();
+    void mazeTurnRight();
+    void mazeTurnLeft();
+    void tankTurnLeftExtreme();
+    
+    
+    
+    //variables
+    struct sensors_ ref;
+    uint8 SW1_Read(void);
+    //int xcount = 0;
+    //int ycount = 0;
+    
+    
+    //starting sensors
+    reflectance_start();
+    motor_start();
+    IR_Start();
+    Ultra_Start();
+    
+    while(true){
+        if(SW1_Read() == 0){
+            break;
+        }
+    }
+    
+    while(true){
+        reflectance_read(&ref);
+        motor_forward(50, 0);
+        if(isLineIntersection(ref)){
+            skip();
+            stopMovement();
+            IR_flush();
+            IR_wait();
+            break;
+        }
+    }
+    
+    // Main place
+    while(true){
+        reflectance_read(&ref);
+        motor_forward(50, 0);
+        
+        if(objectAhead()){
+            while(true){
+                reflectance_read(&ref);
+                motor_forward(50, 0);
+                if(isLineIntersection(ref)){
+                    skip();
+                    mazeTurnLeft();
+                    break;
+                }
+            }
+        }
+
+
+        
+    }
+    
+    
+    
+}
+        
+    
+     bool objectAhead(){
     
     if(Ultra_GetDistance() <= 15){
         return true;
@@ -514,13 +810,21 @@ void tankTurnRight(){
     MotorDirRight_Write(1);     // set RightMotor forward mode
     PWM_WriteCompare1(100); 
     PWM_WriteCompare2(100); 
-    vTaskDelay(730);
+    vTaskDelay(710);
     MotorDirRight_Write(0);
 }
 
 void checkForObstacle(){
     
 
+}
+
+void tankTurnLeftExtreme(){
+    MotorDirLeft_Write(1);      // set LeftMotor backward mode
+    MotorDirRight_Write(0);     // set RightMotor forward mode
+    PWM_WriteCompare1(250); 
+    PWM_WriteCompare2(250); 
+    vTaskDelay(250);
 }
 
 void mazeTurnRight(){
@@ -557,8 +861,6 @@ void mazeTurnLeft(){
     skip();
 }
     
-
-
 #endif
 
 #if 0
