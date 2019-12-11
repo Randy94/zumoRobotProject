@@ -57,9 +57,7 @@
 */
 
 #if 1
-    struct accData_ data;
-    
-
+    // Sumo botti
     void zmain(void)
     {
         bool objectAhead();
@@ -79,7 +77,9 @@
         IR_Start();
         Ultra_Start();
         LSM303D_Start();
+        
       while(true){
+        
             if(SW1_Read() == 0){
                 
                 // Loop to the first intersectio waiting for IR Signal!
@@ -97,17 +97,20 @@
                     
                 }
                 
-            
+
             
         
         while(true){
             LSM303D_Read_Acc(&data);
             if(objectAhead()){
-                if(isThereLine()){
-                motor_forward(0,0);
-                moveBackward();
-                }else{
-                moveForward();}
+                while(true){
+                    moveForward();
+                    if(isLineIntersection()){
+                        motor_forward(0,0);
+                        moveBackward();
+                        break;
+                    }
+                }
             }//else if(bump){
             
           //  }
@@ -117,9 +120,11 @@
             }
         
             }
-        
         }
-    }     
+    }
+        
+}
+         
         
         
         
@@ -127,7 +132,7 @@
         
         
         
-        }
+        
     void hunt(){
     motor_turn(150,0,0);
     
@@ -153,7 +158,7 @@
     
     int average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
     
-    if(average >= 14000){
+    if(average >= 10000){
         return true;
     }
     
@@ -163,15 +168,19 @@
     
     if(ref.r1 >= 10000 || ref.r2 >= 10000 || ref.l1 >= 10000 || ref.l2 >= 10000 || ref.l3 >= 10000 || ref.r3 >= 10000 ){
         return true;
-    } return false;}
-    bool bump(struct accData_data){
+    } 
+        return false;
     }
+    
+//    bool bump(struct accData_data){
+//    }
 
 
     
 #endif
 
 #if 0
+    // Maze
     void zmain(void)
     {
         
@@ -428,6 +437,7 @@ void mazeTurnLeft(){
 #endif
 
 #if 0
+    // Linjan seuraus robotti
     void zmain(void)
     {
         // Initializing methods
@@ -453,13 +463,15 @@ void mazeTurnLeft(){
         void backToMiddleLineRight();
         void backToMiddleLineLeft();
         int count = 0;
-        send_mqtt("Zumo045/debug","toimii");
+        
         
 
         
         // Creating variables
         struct sensors_ ref;
         uint8 SW1_Read(void);
+        TickType_t start;
+        TickType_t end;
         
 
         // Starting needed sensors
@@ -481,7 +493,10 @@ void mazeTurnLeft(){
                         skip();
                         stopMovement();
                         IR_flush();
+                        print_mqtt("Zumo045/ready","line");
+                        start = xTaskGetTickCount();
                         IR_wait();
+                        print_mqtt("Zumo045/start", "%d", start);
                         break;
                     }
                 }
@@ -491,9 +506,13 @@ void mazeTurnLeft(){
                     reflectance_read(&ref);
                     printf(" _||_ %d, %d, %d, %d, %d, %d\n", ref.l3, ref.l2, ref.l1, ref.r1, ref.r2, ref.r3);
                     if(isLineIntersection(ref)){
-                        if(count>=8){
+                        if(count>=10){
                             motor_forward(0,0);
                             motor_stop();
+                            end = xTaskGetTickCount();
+                            print_mqtt("Zumo045/stop","%d", end);
+                            print_mqtt("Zumo045/time","%d", end-start);
+                            break;
                         }else{
                             moveForward();
                             count++;}                        
@@ -517,6 +536,10 @@ void mazeTurnLeft(){
                         hardTurnRight();
                     }
                 
+                }
+                
+                while(true){
+                    vTaskDelay(100); // sleep (in an infinite loop)
                 }
                 
             }
@@ -647,30 +670,38 @@ bool endOfTheLineRight(struct sensors_ ref){
 //void stopMovement(){
 //    motor_forward(0, 0);
 //}
+
+// 40, 255
 void turnLeft(){
-    motor_turn(40, 255, 0);
+    motor_turn(40, 200, 0);
 }
+// 0, 255
 void hardTurnLeft(){
     motor_turn(0, 255, 0);
 }
 
 void skip(){
-    motor_forward(60, 200);
+    motor_forward(80, 200);
 }
 
+//255, 40
 void turnRight(){
-    motor_turn(255, 40, 0);
+    motor_turn(200, 40, 0);
 }
+//255, 0
 void hardTurnRight(){
     motor_turn(255, 0, 0);
 }
+// 180, 120
 void backToMiddleLineRight(){
     motor_turn(180, 120, 0);
 }
 
+// 120, 180
 void backToMiddleLineLeft(){
     motor_turn(120, 180, 0);
 }
+// 160
 void moveForward(){
     motor_forward(160, 0);
 }
@@ -1609,7 +1640,7 @@ void satunnais_kaannos(){
 
 #endif
 
-#if 1
+#if 0
     // Assignment 5.3
     void zmain(){
     
