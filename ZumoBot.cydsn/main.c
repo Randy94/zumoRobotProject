@@ -56,7 +56,7 @@
  * @details  ** Enable global interrupt since Zumo library uses interrupts. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
 
-#if 1
+#if 0
     // Sumo botti
     void zmain(void)
     {
@@ -181,7 +181,7 @@
     
 #endif
 
-#if 0
+#if 1
     // Maze
     void zmain(void)
     {
@@ -212,7 +212,7 @@
     struct sensors_ ref;
     uint8 SW1_Read(void);
     int xcount = 0;
-    //int ycount = 0;
+    int ycount = 0;
     
     
     //starting sensors
@@ -242,45 +242,55 @@
             
             
         
-                // Line following
+                // Main loop
                 while(true){
-                reflectance_read(&ref);
-                if(isLineMiddle(ref)){
-                    moveForward();
-                }else if(isLineLittleRight(ref)){
-                    backToMiddleLineRight();
-                }else if(isLineLittleLeft(ref)){
-                    backToMiddleLineLeft();
+                    
+                    reflectance_read(&ref);
+                    // Basic Midlle Line following
+                    if(isLineMiddle(ref)){
+                        moveForward();
+                    }else if(isLineLittleRight(ref)){
+                        backToMiddleLineRight();
+                    }else if(isLineLittleLeft(ref)){
+                        backToMiddleLineLeft();
+                    }else if(isLineIntersection(ref)){
+                        ycount++;
+                        print_mqtt("Zumo045/position y", "%d", ycount);
                     }
                 
+                // Here do the checking if there is a abject ahead make the right turn
                 if(objectAhead() && xcount >= 0){
                     xcount++;
-                    printf("asdasd----------------------\n");
+                    print_mqtt("Zumo045/position X", "%d", xcount);
                     while(true){
                         moveForward();
-                        if(isLineIntersection()){
+                        if(isLineIntersection(ref)){
+                            ycount++;
+                            print_mqtt("Zumo045/position y", "%d", ycount);
                             break;
                         }
                     }
                     mazeTurnRight();
+                // Here if the x is equal to 3 we do left turns untill there is no object ahead.
                 }else if(objectAhead() && xcount == 3){
-                    // Tästä lähtee vetään vasemmalle kunnes ei ole estettä edessä
                     while(true){
                         xcount--;
+                        print_mqtt("Zumo045/position X", "%d", xcount);
                         mazeTurnLeft();
-                        if(objectAhead()){
+                        if(!objectAhead()){
                             break;
                         }
                     }
+                // If the x is bellow 0 and we have object ahead we go left
                 }else if(objectAhead() && xcount < 0){
                     xcount--;
                     mazeTurnLeft();
+                // Here if the x is equal to 3 we do right turns untill there is no object ahead.
                 }else if(objectAhead() && xcount == -3){
-                    // Tästä lähtee oikealle kunnse ei ole estettä edessä
                     while(true){
                         xcount++;
                         mazeTurnRight();
-                        if(objectAhead()){
+                        if(!objectAhead()){
                             break;
                         }
                     }
@@ -295,9 +305,9 @@
     bool objectAhead(){
     
     if(Ultra_GetDistance() <= 15){
-    return true;
+        return true;
     }
-    return false;  
+        return false;  
     }
     
     
@@ -428,7 +438,7 @@ void mazeTurnLeft(){
         if(isLineIntersection(ref)){
             skip();
             break;
-        }
+        }   
     }
     tankTurnRight();
     skip();
