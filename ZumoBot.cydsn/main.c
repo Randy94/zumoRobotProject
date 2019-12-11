@@ -56,6 +56,74 @@
  * @details  ** Enable global interrupt since Zumo library uses interrupts. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
 
+#if 1
+    void zmain(void){
+    void tankTurnLeft();
+    void tankTurnRight();    
+    void oneHundreadEightyDegreeTurnRight();
+    void fourtyFiveDegreeTurnRight();
+    void ninetyDegreeTurnRight();
+    void oneHundreadTwentyDegreeTurnRight();
+    
+    
+    motor_start();
+    ninetyDegreeTurnRight();
+    motor_stop();
+    
+    }
+    
+    
+    void oneHundreadEightyDegreeTurnRight(){
+    MotorDirLeft_Write(0);      // set LeftMotor backward mode
+    MotorDirRight_Write(1);     // set RightMotor forward mode
+    PWM_WriteCompare1(255); 
+    PWM_WriteCompare2(255); 
+    vTaskDelay(390);
+    MotorDirRight_Write(0);
+}
+
+    void fourtyFiveDegreeTurnRight(){
+    MotorDirLeft_Write(0);      // set LeftMotor backward mode
+    MotorDirRight_Write(1);     // set RightMotor forward mode
+    PWM_WriteCompare1(255); 
+    PWM_WriteCompare2(255); 
+    vTaskDelay(120);
+    MotorDirRight_Write(0);
+}
+    void ninetyDegreeTurnRight(){
+    MotorDirLeft_Write(0);      // set LeftMotor backward mode
+    MotorDirRight_Write(1);     // set RightMotor forward mode
+    PWM_WriteCompare1(255); 
+    PWM_WriteCompare2(255); 
+    vTaskDelay(215);
+    MotorDirRight_Write(0);
+}
+    void oneHundreadTwentyDegreeTurnRight(){
+    MotorDirLeft_Write(0);      // set LeftMotor backward mode
+    MotorDirRight_Write(1);     // set RightMotor forward mode
+    PWM_WriteCompare1(255); 
+    PWM_WriteCompare2(255); 
+    vTaskDelay(330);
+    MotorDirRight_Write(0);
+}
+    
+
+
+
+
+    
+    
+#endif
+
+
+
+
+
+
+
+
+
+
 #if 0
     // Sumo botti
     void zmain(void)
@@ -63,6 +131,12 @@
         bool objectAhead();
         bool isLineIntersection();
         bool isThereLine();
+        bool isLineLittleLeft();
+        bool isLineLittleRight();
+        bool isLineLeft();
+        bool isLineRight();
+        bool isLineLeftEdge();
+        bool isLineRightEdge();
         void stopMovement();
         void moveBack();
         void moveForward();
@@ -176,12 +250,51 @@
     } return false;}
     //bool bump(struct accData_data){
     //}
-
-
+    bool isLineLittleLeft(struct sensors_ref){
+    
+    if(ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
+        return true;
+    } return false;}
+    
+    
+    bool isLineLittleRight(struct sensors_ref){
+    
+    if(ref.l1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r1 >= 10000 && ref.r2 >= 10000 && ref.r3 >= 10000 ){
+        return true;
+    } return false;}
+    
+    
+    bool isLineLeft(struct sensors_ref){
+    
+    if(ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
+        return true;
+    } return false;}
+    
+    
+    bool isLineRight(struct sensors_ref){
+    
+    if(ref.l1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r1 >= 10000 && ref.r2 >= 10000 && ref.r3 < 10000 ){
+        return true;
+    } return false;}
+    
+    
+    bool isLineLeftEdge(struct sensors_ref){
+    
+    if(ref.l1 >= 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
+        return true;
+    } return false;}
+    
+    
+    bool isLineRightEdge(struct sensors_ref){
+    
+    if(ref.l1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r1 >= 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
+        return true;
+    } return false;}
+    
     
 #endif
 
-#if 1
+#if 0
     // Maze
     void zmain(void)
     {
