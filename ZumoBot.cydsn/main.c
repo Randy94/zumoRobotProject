@@ -55,9 +55,9 @@
  * @brief   
  * @details  ** Enable global interrupt since Zumo library uses interrupts. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
-
+// testiohjelma käännöksille 
 #if 1
-<<<<<<< HEAD
+
     void zmain(void){
     void tankTurnLeft();
     void tankTurnRight();    
@@ -65,7 +65,10 @@
     void fourtyFiveDegreeTurnRight();
     void ninetyDegreeTurnRight();
     void oneHundreadTwentyDegreeTurnRight();
-    
+    void oneHundreadEightyDegreeTurnLeft();
+    void fourtyFiveDegreeTurnLeft();
+    void ninetyDegreeTurnLeft();
+    void oneHundreadTwentyDegreeTurnLeft();
     
     motor_start();
     ninetyDegreeTurnRight();
@@ -96,7 +99,7 @@
     MotorDirRight_Write(1);     // set RightMotor forward mode
     PWM_WriteCompare1(255); 
     PWM_WriteCompare2(255); 
-    vTaskDelay(215);
+    vTaskDelay(205);
     MotorDirRight_Write(0);
 }
     void oneHundreadTwentyDegreeTurnRight(){
@@ -108,7 +111,40 @@
     MotorDirRight_Write(0);
 }
     
+    void oneHundreadEightyDegreeTurnLeft(){
+    MotorDirLeft_Write(1);      // set LeftMotor backward mode
+    MotorDirRight_Write(0);     // set RightMotor forward mode
+    PWM_WriteCompare1(255); 
+    PWM_WriteCompare2(255); 
+    vTaskDelay(390);
+    MotorDirRight_Write(0);
+}
 
+    void fourtyFiveDegreeTurnLeft(){
+    MotorDirLeft_Write(1);      // set LeftMotor backward mode
+    MotorDirRight_Write(0);     // set RightMotor forward mode
+    PWM_WriteCompare1(255); 
+    PWM_WriteCompare2(255); 
+    vTaskDelay(120);
+    MotorDirRight_Write(0);
+}
+    void ninetyDegreeTurnLeft(){
+    MotorDirLeft_Write(1);      // set LeftMotor backward mode
+    MotorDirRight_Write(0);     // set RightMotor forward mode
+    PWM_WriteCompare1(255); 
+    PWM_WriteCompare2(255); 
+    vTaskDelay(205);
+    MotorDirRight_Write(0);
+}
+    void oneHundreadTwentyDegreeTurnLeft(){
+    MotorDirLeft_Write(1);      // set LeftMotor backward mode
+    MotorDirRight_Write(0);     // set RightMotor forward mode
+    PWM_WriteCompare1(255); 
+    PWM_WriteCompare2(255); 
+    vTaskDelay(330);
+    MotorDirRight_Write(0);
+}
+    
 
 
 
@@ -124,10 +160,10 @@
 
 
 
+#if 0
 
-=======
     
-    void zmain(){
+    void zmain(void){
     
 
         struct accData_ data;
@@ -149,7 +185,7 @@
     
 #endif
 
->>>>>>> 806aeb7644658a360a82426ce36cedda32821b1b
+
 #if 0
     // Sumo botti
     void zmain(void)
