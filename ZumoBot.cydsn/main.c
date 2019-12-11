@@ -56,8 +56,8 @@
  * @details  ** Enable global interrupt since Zumo library uses interrupts. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
 
-#if 1
-<<<<<<< HEAD
+#if 0
+
     void zmain(void){
     void tankTurnLeft();
     void tankTurnRight();    
@@ -125,7 +125,7 @@
 
 
 
-=======
+#if 0
     
     void zmain(){
     
@@ -149,7 +149,7 @@
     
 #endif
 
->>>>>>> 806aeb7644658a360a82426ce36cedda32821b1b
+
 #if 0
     // Sumo botti
     void zmain(void)
@@ -320,7 +320,7 @@
     
 #endif
 
-#if 0
+#if 1
     // Maze
     void zmain(void)
     {
@@ -388,10 +388,12 @@
                     reflectance_read(&ref);
                     
                     if(isLineIntersection(ref)){
-                        ycount++;
+                        print_mqtt("Zumo045:", "X:%d    Y:%d",xcount,ycount );
+                        
                         if(objectAhead() && xcount>=0){
                             if(xcount==3){
                                 while(true){
+                                    print_mqtt("Zumo045:", "debugt" );
                                     if (xcount >=0){                                    
                                     mazeTurnLeft();
                                     xcount--;
@@ -402,6 +404,10 @@
                                 }else{                        
                                 mazeTurnRight();
                                 xcount++;
+                                if(objectAhead()){
+                                    mazeTurnRight();
+                                    xcount++;
+                                }
                         }
                         }else if(objectAhead() && xcount<0 ){
                             if(xcount==-3){
@@ -416,13 +422,19 @@
                             }else{
                             mazeTurnLeft();
                             xcount--;
+                            if(objectAhead()){
+                                mazeTurnLeft();
+                                xcount--;
                             }
-                            
+                            }
+                            ycount++;
+                            vTaskDelay(300);
                         }
                         
  
 
-                
+                    
+                    
                     }else{
                 
                     // Basic Midlle Line following
@@ -516,23 +528,23 @@ bool isLineMoreLeft(struct sensors_ ref){
 }
     
     void moveForward(){
-        motor_forward(50, 0);
+        motor_forward(80, 0);
     }
     
     void hardTurnLeft(){
-        motor_turn(30, 80, 0);
+        motor_turn(40, 110, 0);
     }
     
     void hardTurnRight(){
-        motor_turn(80, 30, 0);
+        motor_turn(110, 40, 0);
     }
     
     void backToMiddleLineRight(){
-        motor_turn(50, 30, 0);
+        motor_turn(80, 40, 0);
     }
     
     void backToMiddleLineLeft(){
-        motor_turn(30, 50, 0);
+        motor_turn(80, 40, 0);
     }
     
     void goBack(){
@@ -574,14 +586,20 @@ void mazeTurnRight(){
     
     struct sensors_ ref;
     skip();
-    tankTurnRight();
-        if(objectAhead()){
-            tankTurnLeft();
-            tankTurnLeft();
-    }else{
+    tankTurnRight();        
     while(true){
         reflectance_read(&ref);
-        moveForward();
+        if(isLineMiddle(ref)){
+                        moveForward();
+                        }else if(isLineLittleRight(ref)){
+                        backToMiddleLineRight();
+                        }else if(isLineLittleLeft(ref)){
+                        backToMiddleLineLeft();
+                        }else if(isLineMoreLeft(ref)){
+                         hardTurnLeft();
+                        }else if(isLineMoreRight(ref)){
+                         hardTurnRight();
+                        }
         if(isLineIntersection(ref)){
             
             skip();
@@ -589,38 +607,39 @@ void mazeTurnRight(){
         }
     }
     
-    tankTurnLeft();
-    if(objectAhead()){
-        mazeTurnRight();
-    }else{
-    skip();
-    }
     
-}
+    tankTurnLeft();
+    
+
 }
 void mazeTurnLeft(){
     
     struct sensors_ ref;
     skip();
     tankTurnLeft();
-    if(objectAhead()){
-        tankTurnRight();
-        tankTurnRight();
-    }else{
+
     while(true){
         reflectance_read(&ref);
-        moveForward();
+        if(isLineMiddle(ref)){
+                moveForward();
+            }else if(isLineLittleRight(ref)){
+                backToMiddleLineRight();
+            }else if(isLineLittleLeft(ref)){
+                backToMiddleLineLeft();
+            }else if(isLineMoreLeft(ref)){
+                hardTurnLeft();
+            }else if(isLineMoreRight(ref)){
+                hardTurnRight();
+        }
         if(isLineIntersection(ref)){
             skip();
             break;
-        }   
+        }  
+        tankTurnRight();
     }
-    tankTurnRight();
-    if(objectAhead()){
-    mazeTurnLeft();
-    }else{
-    skip();}
-    }
+    
+    
+
 }
     
 
