@@ -168,6 +168,7 @@
 
         struct accData_ data;
         
+        
         if(!LSM303D_Start()){
              printf("LSM303D failed to initialize!!! Program is Ending!!!\n");
             while(1) vTaskDelay(10); 
@@ -180,14 +181,14 @@
             printf("x %10d y %10d\n",data.accX, data.accY);
             vTaskDelay(100);
             
-            if(data.accX <= -400 && data.accX >= -1200){
+            if(data.accX <= -800 && data.accX >= -2400){
                 printf("Hit from the back\n");
-            }else if(data.accX >= 400 && data.accX <= 1200){
+            }else if(data.accX >= 800 && data.accX <= 2400){
                 printf("Hit from the front\n");
-            }else if(data.accY <= -600 && data.accY >= -1000){
-                printf("Hit from the left");
-            }else if(data.accY >= 100 && data.accY <= 300){
+            }else if(data.accY <= -1200 && data.accY >= -2000){
                 printf("Hit from the right");
+            }else if(data.accY >= 200 && data.accY <= 2000){
+                printf("Hit from the left");
             }
             
         }
@@ -910,7 +911,7 @@ void mazeTurnLeft(){
     
 #endif
 
-#if 0
+#if 1
     // Linjan seuraus robotti
     void zmain(void)
     {
