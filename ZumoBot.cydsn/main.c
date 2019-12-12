@@ -230,6 +230,9 @@
         struct accData_ data;        
         struct sensors_ ref;
         uint8 SW1_Read(void);
+        TickType_t start;
+        TickType_t end;
+        
         
         //start everything
         
@@ -238,6 +241,7 @@
         IR_Start();
         Ultra_Start();
         LSM303D_Start();
+        
         
         
       while(true){
@@ -251,6 +255,7 @@
                     if(isLineIntersection(ref)){                        
                         stopMovement();
                         IR_flush();
+                        print_mqtt("Zumo045/ready ", "zumo");
                         IR_wait();
                         motor_forward(255,800);
                         motor_forward(0,0);
@@ -260,7 +265,10 @@
                 }
                 
 
-            
+        // Printing out the start time
+        start = xTaskGetTickCount();
+        print_mqtt("Zumo045/start ", "%d", start);
+        
         //sumo loop
         while(true){
         // reading the sensors for data.
@@ -299,7 +307,18 @@
                     backToMiddle();
                     oneHundreadEightyDegreeTurnRight();
                     
-                    }   
+                    }
+                
+
+                
+                // Stoping the shit and print mqtt time
+                if(SW1_Read() == 0){
+                    end = xTaskGetTickCount();
+                    print_mqtt("Zumo045/stop ", "%d", end);
+                    print_mqtt("Zumo045/time ", "%d", end - start);
+                    break;
+                    }
+                
                 }
             }
         }
@@ -1143,7 +1162,7 @@ void mazeTurnLeft(){
     
 #endif
 
-#if 1
+#if 0
     // Line following part
     void zmain(void)
     {
@@ -1223,7 +1242,7 @@ void mazeTurnLeft(){
                             
                             // Calculating the time that it took to run the course
                             print_mqtt("Zumo045/stop","%d", end);
-                            print_mqtt("Zumo045/time","%d", end-start);
+                            print_mqtt("Zmo045u/time","%d", end-start);
                             break;
                         }else{
                             moveForward();
