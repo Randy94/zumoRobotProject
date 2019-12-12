@@ -55,10 +55,9 @@
  * @brief   
  * @details  ** Enable global interrupt since Zumo library uses interrupts. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
-<<<<<<< HEAD
+
 // testiohjelma käännöksille 
-=======
->>>>>>> 3462b21405370226e72baa5cc5a19041c8de5ebe
+
 #if 0
 
     void zmain(void){
@@ -205,6 +204,8 @@
     // Sumo botti
     void zmain(void)
     {
+        
+    //methods and booleans
         bool objectAhead();
         bool isLineIntersection();
         bool isThereLine();
@@ -219,20 +220,18 @@
         void moveForward();
         void hunt();
         void oneHundreadEightyDegreeTurnRight();
-        void fourtyFiveDegreeTurnRight();
-        void ninetyDegreeTurnRight();
         void oneHundreadTwentyDegreeTurnRight();
         void oneHundreadEightyDegreeTurnLeft();
-        void fourtyFiveDegreeTurnLeft();
-        void ninetyDegreeTurnLeft();
         void oneHundreadTwentyDegreeTurnLeft();
         void backToMiddle();
         
-        
+        // Structures
         
         struct accData_ data;        
         struct sensors_ ref;
         uint8 SW1_Read(void);
+        
+        //start everything
         
         reflectance_start();
         motor_start();
@@ -240,11 +239,12 @@
         Ultra_Start();
         LSM303D_Start();
         
+        
       while(true){
         
             if(SW1_Read() == 0){
                 
-                // Loop to the first intersectio waiting for IR Signal!
+        // Loop to the first intersectio waiting for IR Signal!
                 while(true){
                     reflectance_read(&ref);
                     motor_forward(50, 10);
@@ -261,15 +261,16 @@
                 
 
             
-        
+        //sumo loop
         while(true){
-            LSM303D_Read_Acc(&data);
-            reflectance_read(&ref);
-            hunt();
-            if(objectAhead()){  
-                
-                moveForward();
-   
+        // reading the sensors for data.
+                LSM303D_Read_Acc(&data);
+                reflectance_read(&ref);
+                hunt();
+            
+                if(objectAhead()){  
+                    moveForward();   
+        //checkups if the robot is one the line and turns               
                 }else if (isLineLittleLeft(ref)) {
                     backToMiddle();
                     oneHundreadEightyDegreeTurnRight();
@@ -280,11 +281,11 @@
                     
                 }else if (isLineLeft(ref)){
                     backToMiddle();
-                    oneHundreadTwentyDegreeTurnRight();
+                    oneHundreadEightyDegreeTurnRight();
                     
                 }if (isLineRight(ref)){
                     backToMiddle();
-                    oneHundreadTwentyDegreeTurnLeft();
+                    oneHundreadEightyDegreeTurnLeft();
                    
                 }else if(isLineLeftEdge(ref)){
                     backToMiddle();
@@ -298,11 +299,8 @@
                     backToMiddle();
                     oneHundreadEightyDegreeTurnRight();
                     
-                }   
-            
-            
-            }
-        
+                    }   
+                }
             }
         }
     }
@@ -317,96 +315,78 @@
         
         
         
+        // methods
+    
     void hunt(){
         motor_turn(255, 0, 0);
-}
+        
+    }
     
     void moveForward(){
-    motor_forward(255,0);
-    }
-    void moveBack(){
-    MotorDirLeft_Write(0);      // set LeftMotor backward mode
-    MotorDirRight_Write(1);     // set RightMotor forward mode
-    PWM_WriteCompare1(250); 
-    PWM_WriteCompare2(250); 
-    motor_forward(255,0);
+        motor_forward(255,0);
+        
     }
     
-    void stopMovement(){
-    motor_forward(0, 0);
+    void moveBack(){
+        MotorDirLeft_Write(0);      // set LeftMotor backward mode
+        MotorDirRight_Write(1);     // set RightMotor forward mode
+        PWM_WriteCompare1(250); 
+        PWM_WriteCompare2(250); 
+        motor_forward(255,0);
+        
     }
+    
+        void stopMovement(){
+        motor_forward(0, 0);
+        
+    }
+    
+        // All turn methods
         void oneHundreadEightyDegreeTurnRight(){
-    MotorDirLeft_Write(0);      // set LeftMotor backward mode
-    MotorDirRight_Write(1);     // set RightMotor forward mode
-    PWM_WriteCompare1(255); 
-    PWM_WriteCompare2(255); 
-    vTaskDelay(390);
-    MotorDirRight_Write(0);
-}
+        MotorDirLeft_Write(0);      // set LeftMotor backward mode
+        MotorDirRight_Write(1);     // set RightMotor forward mode
+        PWM_WriteCompare1(255); 
+        PWM_WriteCompare2(255); 
+        vTaskDelay(390);
+        MotorDirRight_Write(0);
 
-    void fourtyFiveDegreeTurnRight(){
-    MotorDirLeft_Write(0);      // set LeftMotor backward mode
-    MotorDirRight_Write(1);     // set RightMotor forward mode
-    PWM_WriteCompare1(255); 
-    PWM_WriteCompare2(255); 
-    vTaskDelay(120);
-    MotorDirRight_Write(0);
-}
-    void ninetyDegreeTurnRight(){
-    MotorDirLeft_Write(0);      // set LeftMotor backward mode
-    MotorDirRight_Write(1);     // set RightMotor forward mode
-    PWM_WriteCompare1(255); 
-    PWM_WriteCompare2(255); 
-    vTaskDelay(205);
-    MotorDirRight_Write(0);
-}
+    }
+ 
     void oneHundreadTwentyDegreeTurnRight(){
-    MotorDirLeft_Write(0);      // set LeftMotor backward mode
-    MotorDirRight_Write(1);     // set RightMotor forward mode
-    PWM_WriteCompare1(255); 
-    PWM_WriteCompare2(255); 
-    vTaskDelay(330);
-    MotorDirRight_Write(0);
-}
+        MotorDirLeft_Write(0);      // set LeftMotor backward mode
+        MotorDirRight_Write(1);     // set RightMotor forward mode
+        PWM_WriteCompare1(255); 
+        PWM_WriteCompare2(255); 
+        vTaskDelay(330);
+        MotorDirRight_Write(0);
+        
+    }   
     
     void oneHundreadEightyDegreeTurnLeft(){
-    MotorDirLeft_Write(1);      // set LeftMotor backward mode
-    MotorDirRight_Write(0);     // set RightMotor forward mode
-    PWM_WriteCompare1(255); 
-    PWM_WriteCompare2(255); 
-    vTaskDelay(390);
-    MotorDirRight_Write(0);
-}
+        MotorDirLeft_Write(1);      // set LeftMotor backward mode
+        MotorDirRight_Write(0);     // set RightMotor forward mode
+        PWM_WriteCompare1(255); 
+        PWM_WriteCompare2(255); 
+        vTaskDelay(390);
+        MotorDirRight_Write(0);
 
-    void fourtyFiveDegreeTurnLeft(){
-    MotorDirLeft_Write(1);      // set LeftMotor backward mode
-    MotorDirRight_Write(0);     // set RightMotor forward mode
-    PWM_WriteCompare1(255); 
-    PWM_WriteCompare2(255); 
-    vTaskDelay(120);
-    MotorDirRight_Write(0);
-}
-    void ninetyDegreeTurnLeft(){
-    MotorDirLeft_Write(1);      // set LeftMotor backward mode
-    MotorDirRight_Write(0);     // set RightMotor forward mode
-    PWM_WriteCompare1(255); 
-    PWM_WriteCompare2(255); 
-    vTaskDelay(205);
-    MotorDirRight_Write(0);
-}
+    }
+    
     void oneHundreadTwentyDegreeTurnLeft(){
-    MotorDirLeft_Write(1);      // set LeftMotor backward mode
-    MotorDirRight_Write(0);     // set RightMotor forward mode
-    PWM_WriteCompare1(255); 
-    PWM_WriteCompare2(255); 
-    vTaskDelay(330);
-    MotorDirRight_Write(0);
-}
+        MotorDirLeft_Write(1);      // set LeftMotor backward mode
+        MotorDirRight_Write(0);     // set RightMotor forward mode
+        PWM_WriteCompare1(255); 
+        PWM_WriteCompare2(255); 
+        vTaskDelay(330);
+        MotorDirRight_Write(0);
+    }
+    
     void backToMiddle(){  
         motor_forward(0,0);
         motor_backward(255,200);
         motor_forward(255, 800);
-}
+    }
+        // all  checks if the robot is on the black line.
     
     bool objectAhead(){
     
@@ -432,8 +412,8 @@
     if(ref.r1 >= 10000 && ref.r2 >= 10000 && ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r3 >= 10000 ){
         return true;
     } return false;}
-    //bool bump(struct accData_data){
-    //}
+    
+    
     bool isLineLittleLeft(struct sensors_ ref){
     
     if(ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
@@ -478,7 +458,7 @@
     
 #endif
 
-#if 1
+#if 0
     // Maze
     void zmain(void)
     {
