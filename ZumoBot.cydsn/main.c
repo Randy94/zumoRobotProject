@@ -154,14 +154,6 @@
     
 #endif
 
-
-
-
-
-
-
-
-
 #if 0
 
     
@@ -1205,7 +1197,7 @@ void mazeTurnLeft(){
                     reflectance_read(&ref);
                     printf(" _||_ %d, %d, %d, %d, %d, %d\n", ref.l3, ref.l2, ref.l1, ref.r1, ref.r2, ref.r3);
                     if(isLineIntersection(ref)){
-                        // Timing the stop on the third line
+                        // Adding to count when crossing lines. When it gets higher than 10 it makes the stop
                         if(count>=10){
                             motor_forward(0,0);
                             motor_stop();
