@@ -56,7 +56,7 @@
  * @details  ** Enable global interrupt since Zumo library uses interrupts. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
 // testiohjelma käännöksille 
-#if 1
+#if 0
 
     void zmain(void){
     void tankTurnLeft();
@@ -186,7 +186,7 @@
 #endif
 
 
-#if 0
+#if 1
     // Sumo botti
     void zmain(void)
     {
@@ -203,6 +203,17 @@
         void moveBack();
         void moveForward();
         void hunt();
+        void oneHundreadEightyDegreeTurnRight();
+        void fourtyFiveDegreeTurnRight();
+        void ninetyDegreeTurnRight();
+        void oneHundreadTwentyDegreeTurnRight();
+        void oneHundreadEightyDegreeTurnLeft();
+        void fourtyFiveDegreeTurnLeft();
+        void ninetyDegreeTurnLeft();
+        void oneHundreadTwentyDegreeTurnLeft();
+        void backToMiddle();
+        
+        
         
         struct accData_ data;        
         struct sensors_ ref;
@@ -239,27 +250,49 @@
         while(true){
             LSM303D_Read_Acc(&data);
             reflectance_read(&ref);
-            if(objectAhead()){                
-                if(isThereLine(ref)){
-                motor_forward(0,0);
-                moveBack();
-                }else{
+            hunt();
+            if(objectAhead()){  
+                
                 moveForward();
-                }
-            }else{
-                if(isThereLine(ref)){
-                    motor_forward(0,0);
-                    moveBack();
-                }else{                   
-                hunt();
-                }
+   
+                }else if (isLineLittleLeft(ref)) {
+                    backToMiddle();
+                    oneHundreadEightyDegreeTurnRight();
+                    
+                }if (isLineLittleRight(ref)){
+                    backToMiddle();
+                    oneHundreadEightyDegreeTurnLeft();
+                    
+                }else if (isLineLeft(ref)){
+                    backToMiddle();
+                    oneHundreadTwentyDegreeTurnRight();
+                    
+                }if (isLineRight(ref)){
+                    backToMiddle();
+                    oneHundreadTwentyDegreeTurnLeft();
+                   
+                }else if(isLineLeftEdge(ref)){
+                    backToMiddle();
+                    oneHundreadTwentyDegreeTurnRight();
+                    
+                }if (isLineRightEdge(ref)){
+                    backToMiddle();
+                    oneHundreadTwentyDegreeTurnLeft();
+                    
+                }else if(isThereLine()){
+                    backToMiddle();
+                    oneHundreadEightyDegreeTurnRight();
+                    
+                }   
+            
+            
             }
         
             }
         }
     }
         
-}
+
          
         
         
@@ -270,9 +303,9 @@
         
         
     void hunt(){
-    motor_turn(255,0,0);
+        motor_turn(255, 0, 0);
+}
     
-    }
     void moveForward(){
     motor_forward(255,0);
     }
@@ -283,9 +316,83 @@
     PWM_WriteCompare2(250); 
     motor_forward(255,0);
     }
+    
     void stopMovement(){
     motor_forward(0, 0);
     }
+        void oneHundreadEightyDegreeTurnRight(){
+    MotorDirLeft_Write(0);      // set LeftMotor backward mode
+    MotorDirRight_Write(1);     // set RightMotor forward mode
+    PWM_WriteCompare1(255); 
+    PWM_WriteCompare2(255); 
+    vTaskDelay(390);
+    MotorDirRight_Write(0);
+}
+
+    void fourtyFiveDegreeTurnRight(){
+    MotorDirLeft_Write(0);      // set LeftMotor backward mode
+    MotorDirRight_Write(1);     // set RightMotor forward mode
+    PWM_WriteCompare1(255); 
+    PWM_WriteCompare2(255); 
+    vTaskDelay(120);
+    MotorDirRight_Write(0);
+}
+    void ninetyDegreeTurnRight(){
+    MotorDirLeft_Write(0);      // set LeftMotor backward mode
+    MotorDirRight_Write(1);     // set RightMotor forward mode
+    PWM_WriteCompare1(255); 
+    PWM_WriteCompare2(255); 
+    vTaskDelay(205);
+    MotorDirRight_Write(0);
+}
+    void oneHundreadTwentyDegreeTurnRight(){
+    MotorDirLeft_Write(0);      // set LeftMotor backward mode
+    MotorDirRight_Write(1);     // set RightMotor forward mode
+    PWM_WriteCompare1(255); 
+    PWM_WriteCompare2(255); 
+    vTaskDelay(330);
+    MotorDirRight_Write(0);
+}
+    
+    void oneHundreadEightyDegreeTurnLeft(){
+    MotorDirLeft_Write(1);      // set LeftMotor backward mode
+    MotorDirRight_Write(0);     // set RightMotor forward mode
+    PWM_WriteCompare1(255); 
+    PWM_WriteCompare2(255); 
+    vTaskDelay(390);
+    MotorDirRight_Write(0);
+}
+
+    void fourtyFiveDegreeTurnLeft(){
+    MotorDirLeft_Write(1);      // set LeftMotor backward mode
+    MotorDirRight_Write(0);     // set RightMotor forward mode
+    PWM_WriteCompare1(255); 
+    PWM_WriteCompare2(255); 
+    vTaskDelay(120);
+    MotorDirRight_Write(0);
+}
+    void ninetyDegreeTurnLeft(){
+    MotorDirLeft_Write(1);      // set LeftMotor backward mode
+    MotorDirRight_Write(0);     // set RightMotor forward mode
+    PWM_WriteCompare1(255); 
+    PWM_WriteCompare2(255); 
+    vTaskDelay(205);
+    MotorDirRight_Write(0);
+}
+    void oneHundreadTwentyDegreeTurnLeft(){
+    MotorDirLeft_Write(1);      // set LeftMotor backward mode
+    MotorDirRight_Write(0);     // set RightMotor forward mode
+    PWM_WriteCompare1(255); 
+    PWM_WriteCompare2(255); 
+    vTaskDelay(330);
+    MotorDirRight_Write(0);
+}
+    void backToMiddle(){  
+        motor_forward(0,0);
+        motor_backward(255,200);
+        motor_forward(255, 800);
+}
+    
     bool objectAhead(){
     
     if(Ultra_GetDistance() <= 20){
@@ -312,42 +419,42 @@
     } return false;}
     //bool bump(struct accData_data){
     //}
-    bool isLineLittleLeft(struct sensors_ref){
+    bool isLineLittleLeft(struct sensors_ ref){
     
     if(ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
         return true;
     } return false;}
     
     
-    bool isLineLittleRight(struct sensors_ref){
+    bool isLineLittleRight(struct sensors_ ref){
     
     if(ref.l1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r1 >= 10000 && ref.r2 >= 10000 && ref.r3 >= 10000 ){
         return true;
     } return false;}
     
     
-    bool isLineLeft(struct sensors_ref){
+    bool isLineLeft(struct sensors_ ref){
     
-    if(ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
+    if(ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 < 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
         return true;
     } return false;}
     
     
-    bool isLineRight(struct sensors_ref){
+    bool isLineRight(struct sensors_ ref){
     
     if(ref.l1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r1 >= 10000 && ref.r2 >= 10000 && ref.r3 < 10000 ){
         return true;
     } return false;}
     
     
-    bool isLineLeftEdge(struct sensors_ref){
+    bool isLineLeftEdge(struct sensors_ ref){
     
     if(ref.l1 >= 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
         return true;
     } return false;}
     
     
-    bool isLineRightEdge(struct sensors_ref){
+    bool isLineRightEdge(struct sensors_ ref){
     
     if(ref.l1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r1 >= 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
         return true;
