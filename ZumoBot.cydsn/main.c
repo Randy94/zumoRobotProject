@@ -367,7 +367,7 @@
     
 #endif
 
-#if 1
+#if 0
     // Maze
     void zmain(void)
     {
@@ -1053,7 +1053,7 @@ void mazeTurnLeft(){
 #endif
 
 #if 1
-    // Linjan seuraus robotti
+    // Line following part
     void zmain(void)
     {
         // Initializing methods
@@ -1078,13 +1078,14 @@ void mazeTurnLeft(){
         void skip();
         void backToMiddleLineRight();
         void backToMiddleLineLeft();
-        int count = 0;
+        
         
         
 
         
         // Creating variables
         struct sensors_ ref;
+        int count = 0;
         uint8 SW1_Read(void);
         TickType_t start;
         TickType_t end;
@@ -1117,21 +1118,27 @@ void mazeTurnLeft(){
                     }
                 }
                 
+                // Main line following part
                 // Start of the line following
                 while(true){                    
                     reflectance_read(&ref);
                     printf(" _||_ %d, %d, %d, %d, %d, %d\n", ref.l3, ref.l2, ref.l1, ref.r1, ref.r2, ref.r3);
                     if(isLineIntersection(ref)){
+                        // Timing the stop on the third line
                         if(count>=10){
                             motor_forward(0,0);
                             motor_stop();
                             end = xTaskGetTickCount();
+                            
+                            // Calculating the time that it took to run the course
                             print_mqtt("Zumo045/stop","%d", end);
                             print_mqtt("Zumo045/time","%d", end-start);
                             break;
                         }else{
                             moveForward();
-                            count++;}                        
+                            count++;
+                        }
+                    // This is the line following algorith    
                     }else if(isLineMiddle(ref)){
                         moveForward();
                     }else if(isLineLittleRight(ref)){
@@ -1154,6 +1161,7 @@ void mazeTurnLeft(){
                 
                 }
                 
+                // Catching code here. So it dosen't give error
                 while(true){
                     vTaskDelay(100); // sleep (in an infinite loop)
                 }
@@ -1162,6 +1170,7 @@ void mazeTurnLeft(){
         }
     }
     
+//Takes sensor data as parameter. Check if the parameters indicates it being at middle. If middle returns true.    
 bool isLineMiddle(struct sensors_ ref){
 
     // Lisää lisä ehto jos vain jompi kumpi palaa 
@@ -1171,6 +1180,8 @@ bool isLineMiddle(struct sensors_ ref){
     
     return false;
 }
+
+//Takes sensor data as parameter. Check if the parameters indicates it being at right edge. If right edge returns true.
 bool isLineOnRightEdge(struct sensors_ ref){
 
     // Lisää lisä ehto jos vain jompi kumpi palaa 
@@ -1180,6 +1191,8 @@ bool isLineOnRightEdge(struct sensors_ ref){
     
     return false;
 }
+
+//Takes sensor data as parameter. Check if the parameters indicates it being at left edge. If left edge returns true.
 bool isLineOnLeftEdge(struct sensors_ ref){
 
     // Lisää lisä ehto jos vain jompi kumpi palaa 
@@ -1190,6 +1203,7 @@ bool isLineOnLeftEdge(struct sensors_ ref){
     return false;
 }
 
+//Takes sensor data as parameter. Check if the parameters indicates it being a intersection. If intersection returns true.
 bool isLineIntersection(struct sensors_ ref){
     
     int average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
@@ -1201,6 +1215,7 @@ bool isLineIntersection(struct sensors_ ref){
     return false;
 }
 
+//Takes sensor data as parameter. Check if the parameters indicates it being a little to right. If little right returns true.
 bool isLineLittleRight(struct sensors_ ref){
     
     // Lisää lisä ehto jos vain jompi kumpi palaa 
@@ -1211,6 +1226,7 @@ bool isLineLittleRight(struct sensors_ ref){
     return false;
 }
 
+//Takes sensor data as parameter. Check if the parameters indicates it being little left. If little left returns true.
 bool isLineLittleLeft(struct sensors_ ref){
     
     // Lisää lisä ehto jos vain jompi kumpi palaa 
@@ -1221,6 +1237,7 @@ bool isLineLittleLeft(struct sensors_ ref){
     return false;
 }
 
+//Takes sensor data as parameter. Check if the parameters indicates it being at rigt. If right returns true.
 bool isLineMoreRight(struct sensors_ ref){
     
     // Lisää lisä ehto jos vain jompi kumpi palaa 
@@ -1230,6 +1247,7 @@ bool isLineMoreRight(struct sensors_ ref){
     return false;
 }
 
+//Takes sensor data as parameter. Check if the parameters indicates it being at left. If left returns true.
 bool isLineMoreLeft(struct sensors_ ref){
     
     // Lisää lisä ehto jos vain jompi kumpi palaa 
@@ -1238,6 +1256,8 @@ bool isLineMoreLeft(struct sensors_ ref){
     }
     return false;
 }
+
+//Takes sensor data as parameter. Check if the parameters indicates it being at . If left returns true.
 bool endOfTheLineLeft(struct sensors_ ref){
 if(ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r3 < 10000 && ref.l1 >= 10000){
         return true;
@@ -1245,6 +1265,8 @@ if(ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r3 < 10000 && ref.l1 >= 10000){
     return false;
 
 }
+
+//Takes sensor data as parameter. Check if the parameters indicates it being at . If left returns true.
 bool endOfTheLineRight(struct sensors_ ref){
     
     // Lisää lisä ehto jos vain jompi kumpi palaa 
@@ -1253,45 +1275,13 @@ bool endOfTheLineRight(struct sensors_ ref){
     }
     return false;
 }
-// bool isLineIntersectionCorner tarkoituksena on palata viivalle takaisin
 
-//void turnLeft(){
-//    motor_turn(30, 255, 0);
-//}
-//void hardTurnLeft(){
-//    motor_turn(0, 255, 0);
-//}
-//
-//void skip(){
-//    motor_forward(60, 200);
-//}
-//
-//void turnRight(){
-//    motor_turn(255, 30, 0);
-//}
-//void hardTurnRight(){
-//    motor_turn(255, 0, 0);
-//}
-//void backToMiddleLineRight(){
-//    motor_turn(255, 180, 0);
-//}
-//
-//void backToMiddleLineLeft(){
-//    motor_turn(180, 255, 0);
-//}
-//void moveForward(){
-//    motor_forward(255, 0);
-//}
-//
-//void stopMovement(){
-//    motor_forward(0, 0);
-//}
+// Here we have motor turns
 
-// 40, 255
 void turnLeft(){
     motor_turn(40, 200, 0);
 }
-// 0, 255
+
 void hardTurnLeft(){
     motor_turn(0, 255, 0);
 }
@@ -1300,15 +1290,15 @@ void skip(){
     motor_forward(80, 200);
 }
 
-//255, 40
+
 void turnRight(){
     motor_turn(200, 40, 0);
 }
-//255, 0
+
 void hardTurnRight(){
     motor_turn(255, 0, 0);
 }
-// 180, 120
+
 void backToMiddleLineRight(){
     motor_turn(180, 120, 0);
 }
@@ -1361,7 +1351,7 @@ void tankTurnRightExtreme(){
 }
 
 
-
+// Function for setting the real time
 void setRealTime(int hours, int minutes, int seconds){
 
     RTC_Start();
@@ -1378,6 +1368,7 @@ void setRealTime(int hours, int minutes, int seconds){
     
 }
 
+// Function for getting the real time. Houers and minutes
 void getRealTime(){
     RTC_TIME_DATE now;
     RTC_DisableInt();
@@ -1389,11 +1380,6 @@ void getRealTime(){
     
 }
 
-
-
-// some debug prints
-// printf(" _||_ %d", );
-    
 #endif
 
 #if 0
