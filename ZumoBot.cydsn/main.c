@@ -55,6 +55,9 @@
  * @brief   
  * @details  ** Enable global interrupt since Zumo library uses interrupts. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
+
+// testiohjelma käännöksille 
+
 #if 0
 
     void zmain(void){
@@ -197,10 +200,12 @@
 #endif
 
 
-#if 0
+#if 1
     // Sumo botti
     void zmain(void)
     {
+        
+    //methods and booleans
         bool objectAhead();
         bool isLineIntersection();
         bool isThereLine();
@@ -214,10 +219,19 @@
         void moveBack();
         void moveForward();
         void hunt();
+        void oneHundreadEightyDegreeTurnRight();
+        void oneHundreadTwentyDegreeTurnRight();
+        void oneHundreadEightyDegreeTurnLeft();
+        void oneHundreadTwentyDegreeTurnLeft();
+        void backToMiddle();
+        
+        // Structures
         
         struct accData_ data;        
         struct sensors_ ref;
         uint8 SW1_Read(void);
+        
+        //start everything
         
         reflectance_start();
         motor_start();
@@ -225,11 +239,12 @@
         Ultra_Start();
         LSM303D_Start();
         
+        
       while(true){
         
             if(SW1_Read() == 0){
                 
-                // Loop to the first intersectio waiting for IR Signal!
+        // Loop to the first intersectio waiting for IR Signal!
                 while(true){
                     reflectance_read(&ref);
                     motor_forward(50, 10);
@@ -246,31 +261,51 @@
                 
 
             
-        
+        //sumo loop
         while(true){
-            LSM303D_Read_Acc(&data);
-            reflectance_read(&ref);
-            if(objectAhead()){                
-                if(isThereLine(ref)){
-                motor_forward(0,0);
-                moveBack();
-                }else{
-                moveForward();
-                }
-            }else{
-                if(isThereLine(ref)){
-                    motor_forward(0,0);
-                    moveBack();
-                }else{                   
+        // reading the sensors for data.
+                LSM303D_Read_Acc(&data);
+                reflectance_read(&ref);
                 hunt();
+            
+                if(objectAhead()){  
+                    moveForward();   
+        //checkups if the robot is one the line and turns               
+                }else if (isLineLittleLeft(ref)) {
+                    backToMiddle();
+                    oneHundreadEightyDegreeTurnRight();
+                    
+                }if (isLineLittleRight(ref)){
+                    backToMiddle();
+                    oneHundreadEightyDegreeTurnLeft();
+                    
+                }else if (isLineLeft(ref)){
+                    backToMiddle();
+                    oneHundreadEightyDegreeTurnRight();
+                    
+                }if (isLineRight(ref)){
+                    backToMiddle();
+                    oneHundreadEightyDegreeTurnLeft();
+                   
+                }else if(isLineLeftEdge(ref)){
+                    backToMiddle();
+                    oneHundreadTwentyDegreeTurnRight();
+                    
+                }if (isLineRightEdge(ref)){
+                    backToMiddle();
+                    oneHundreadTwentyDegreeTurnLeft();
+                    
+                }else if(isThereLine()){
+                    backToMiddle();
+                    oneHundreadEightyDegreeTurnRight();
+                    
+                    }   
                 }
-            }
-        
             }
         }
     }
         
-}
+
          
         
         
@@ -280,23 +315,79 @@
         
         
         
-    void hunt(){
-    motor_turn(255,0,0);
+        // methods
     
+    void hunt(){
+        motor_turn(255, 0, 0);
+        
     }
+    
     void moveForward(){
-    motor_forward(255,0);
+        motor_forward(255,0);
+        
     }
+    
     void moveBack(){
-    MotorDirLeft_Write(0);      // set LeftMotor backward mode
-    MotorDirRight_Write(1);     // set RightMotor forward mode
-    PWM_WriteCompare1(250); 
-    PWM_WriteCompare2(250); 
-    motor_forward(255,0);
+        MotorDirLeft_Write(0);      // set LeftMotor backward mode
+        MotorDirRight_Write(1);     // set RightMotor forward mode
+        PWM_WriteCompare1(250); 
+        PWM_WriteCompare2(250); 
+        motor_forward(255,0);
+        
     }
-    void stopMovement(){
-    motor_forward(0, 0);
+    
+        void stopMovement(){
+        motor_forward(0, 0);
+        
     }
+    
+        // All turn methods
+        void oneHundreadEightyDegreeTurnRight(){
+        MotorDirLeft_Write(0);      // set LeftMotor backward mode
+        MotorDirRight_Write(1);     // set RightMotor forward mode
+        PWM_WriteCompare1(255); 
+        PWM_WriteCompare2(255); 
+        vTaskDelay(390);
+        MotorDirRight_Write(0);
+
+    }
+ 
+    void oneHundreadTwentyDegreeTurnRight(){
+        MotorDirLeft_Write(0);      // set LeftMotor backward mode
+        MotorDirRight_Write(1);     // set RightMotor forward mode
+        PWM_WriteCompare1(255); 
+        PWM_WriteCompare2(255); 
+        vTaskDelay(330);
+        MotorDirRight_Write(0);
+        
+    }   
+    
+    void oneHundreadEightyDegreeTurnLeft(){
+        MotorDirLeft_Write(1);      // set LeftMotor backward mode
+        MotorDirRight_Write(0);     // set RightMotor forward mode
+        PWM_WriteCompare1(255); 
+        PWM_WriteCompare2(255); 
+        vTaskDelay(390);
+        MotorDirRight_Write(0);
+
+    }
+    
+    void oneHundreadTwentyDegreeTurnLeft(){
+        MotorDirLeft_Write(1);      // set LeftMotor backward mode
+        MotorDirRight_Write(0);     // set RightMotor forward mode
+        PWM_WriteCompare1(255); 
+        PWM_WriteCompare2(255); 
+        vTaskDelay(330);
+        MotorDirRight_Write(0);
+    }
+    
+    void backToMiddle(){  
+        motor_forward(0,0);
+        motor_backward(255,200);
+        motor_forward(255, 800);
+    }
+        // all  checks if the robot is on the black line.
+    
     bool objectAhead(){
     
     if(Ultra_GetDistance() <= 20){
@@ -321,44 +412,44 @@
     if(ref.r1 >= 10000 && ref.r2 >= 10000 && ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r3 >= 10000 ){
         return true;
     } return false;}
-    //bool bump(struct accData_data){
-    //}
-    bool isLineLittleLeft(struct sensors_ref){
+    
+    
+    bool isLineLittleLeft(struct sensors_ ref){
     
     if(ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
         return true;
     } return false;}
     
     
-    bool isLineLittleRight(struct sensors_ref){
+    bool isLineLittleRight(struct sensors_ ref){
     
     if(ref.l1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r1 >= 10000 && ref.r2 >= 10000 && ref.r3 >= 10000 ){
         return true;
     } return false;}
     
     
-    bool isLineLeft(struct sensors_ref){
+    bool isLineLeft(struct sensors_ ref){
     
-    if(ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
+    if(ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 < 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
         return true;
     } return false;}
     
     
-    bool isLineRight(struct sensors_ref){
+    bool isLineRight(struct sensors_ ref){
     
     if(ref.l1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r1 >= 10000 && ref.r2 >= 10000 && ref.r3 < 10000 ){
         return true;
     } return false;}
     
     
-    bool isLineLeftEdge(struct sensors_ref){
+    bool isLineLeftEdge(struct sensors_ ref){
     
     if(ref.l1 >= 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
         return true;
     } return false;}
     
     
-    bool isLineRightEdge(struct sensors_ref){
+    bool isLineRightEdge(struct sensors_ ref){
     
     if(ref.l1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r1 >= 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
         return true;
