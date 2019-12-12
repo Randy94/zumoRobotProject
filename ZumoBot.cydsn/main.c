@@ -55,6 +55,9 @@
  * @brief   
  * @details  ** Enable global interrupt since Zumo library uses interrupts. **<br>&nbsp;&nbsp;&nbsp;CyGlobalIntEnable;<br>
 */
+
+// testiohjelma käännöksille 
+
 #if 0
 
     void zmain(void){
@@ -167,6 +170,7 @@
 
         struct accData_ data;
         
+        
         if(!LSM303D_Start()){
              printf("LSM303D failed to initialize!!! Program is Ending!!!\n");
             while(1) vTaskDelay(10); 
@@ -179,14 +183,14 @@
             printf("x %10d y %10d\n",data.accX, data.accY);
             vTaskDelay(100);
             
-            if(data.accX <= -400 && data.accX >= -1200){
+            if(data.accX <= -800 && data.accX >= -2400){
                 printf("Hit from the back\n");
-            }else if(data.accX >= 400 && data.accX <= 1200){
+            }else if(data.accX >= 800 && data.accX <= 2400){
                 printf("Hit from the front\n");
-            }else if(data.accY <= -600 && data.accY >= -1000){
-                printf("Hit from the left");
-            }else if(data.accY >= 100 && data.accY <= 300){
+            }else if(data.accY <= -1200 && data.accY >= -2000){
                 printf("Hit from the right");
+            }else if(data.accY >= 200 && data.accY <= 2000){
+                printf("Hit from the left");
             }
             
         }
@@ -196,10 +200,12 @@
 #endif
 
 
-#if 0
+#if 1
     // Sumo botti
     void zmain(void)
     {
+        
+    //methods and booleans
         bool objectAhead();
         bool isLineIntersection();
         bool isThereLine();
@@ -213,10 +219,19 @@
         void moveBack();
         void moveForward();
         void hunt();
+        void oneHundreadEightyDegreeTurnRight();
+        void oneHundreadTwentyDegreeTurnRight();
+        void oneHundreadEightyDegreeTurnLeft();
+        void oneHundreadTwentyDegreeTurnLeft();
+        void backToMiddle();
+        
+        // Structures
         
         struct accData_ data;        
         struct sensors_ ref;
         uint8 SW1_Read(void);
+        
+        //start everything
         
         reflectance_start();
         motor_start();
@@ -224,11 +239,12 @@
         Ultra_Start();
         LSM303D_Start();
         
+        
       while(true){
         
             if(SW1_Read() == 0){
                 
-                // Loop to the first intersectio waiting for IR Signal!
+        // Loop to the first intersectio waiting for IR Signal!
                 while(true){
                     reflectance_read(&ref);
                     motor_forward(50, 10);
@@ -245,31 +261,51 @@
                 
 
             
-        
+        //sumo loop
         while(true){
-            LSM303D_Read_Acc(&data);
-            reflectance_read(&ref);
-            if(objectAhead()){                
-                if(isThereLine(ref)){
-                motor_forward(0,0);
-                moveBack();
-                }else{
-                moveForward();
-                }
-            }else{
-                if(isThereLine(ref)){
-                    motor_forward(0,0);
-                    moveBack();
-                }else{                   
+        // reading the sensors for data.
+                LSM303D_Read_Acc(&data);
+                reflectance_read(&ref);
                 hunt();
+            
+                if(objectAhead()){  
+                    moveForward();   
+        //checkups if the robot is one the line and turns               
+                }else if (isLineLittleLeft(ref)) {
+                    backToMiddle();
+                    oneHundreadEightyDegreeTurnRight();
+                    
+                }if (isLineLittleRight(ref)){
+                    backToMiddle();
+                    oneHundreadEightyDegreeTurnLeft();
+                    
+                }else if (isLineLeft(ref)){
+                    backToMiddle();
+                    oneHundreadEightyDegreeTurnRight();
+                    
+                }if (isLineRight(ref)){
+                    backToMiddle();
+                    oneHundreadEightyDegreeTurnLeft();
+                   
+                }else if(isLineLeftEdge(ref)){
+                    backToMiddle();
+                    oneHundreadTwentyDegreeTurnRight();
+                    
+                }if (isLineRightEdge(ref)){
+                    backToMiddle();
+                    oneHundreadTwentyDegreeTurnLeft();
+                    
+                }else if(isThereLine()){
+                    backToMiddle();
+                    oneHundreadEightyDegreeTurnRight();
+                    
+                    }   
                 }
-            }
-        
             }
         }
     }
         
-}
+
          
         
         
@@ -279,23 +315,79 @@
         
         
         
-    void hunt(){
-    motor_turn(255,0,0);
+        // methods
     
+    void hunt(){
+        motor_turn(255, 0, 0);
+        
     }
+    
     void moveForward(){
-    motor_forward(255,0);
+        motor_forward(255,0);
+        
     }
+    
     void moveBack(){
-    MotorDirLeft_Write(0);      // set LeftMotor backward mode
-    MotorDirRight_Write(1);     // set RightMotor forward mode
-    PWM_WriteCompare1(250); 
-    PWM_WriteCompare2(250); 
-    motor_forward(255,0);
+        MotorDirLeft_Write(0);      // set LeftMotor backward mode
+        MotorDirRight_Write(1);     // set RightMotor forward mode
+        PWM_WriteCompare1(250); 
+        PWM_WriteCompare2(250); 
+        motor_forward(255,0);
+        
     }
-    void stopMovement(){
-    motor_forward(0, 0);
+    
+        void stopMovement(){
+        motor_forward(0, 0);
+        
     }
+    
+        // All turn methods
+        void oneHundreadEightyDegreeTurnRight(){
+        MotorDirLeft_Write(0);      // set LeftMotor backward mode
+        MotorDirRight_Write(1);     // set RightMotor forward mode
+        PWM_WriteCompare1(255); 
+        PWM_WriteCompare2(255); 
+        vTaskDelay(390);
+        MotorDirRight_Write(0);
+
+    }
+ 
+    void oneHundreadTwentyDegreeTurnRight(){
+        MotorDirLeft_Write(0);      // set LeftMotor backward mode
+        MotorDirRight_Write(1);     // set RightMotor forward mode
+        PWM_WriteCompare1(255); 
+        PWM_WriteCompare2(255); 
+        vTaskDelay(330);
+        MotorDirRight_Write(0);
+        
+    }   
+    
+    void oneHundreadEightyDegreeTurnLeft(){
+        MotorDirLeft_Write(1);      // set LeftMotor backward mode
+        MotorDirRight_Write(0);     // set RightMotor forward mode
+        PWM_WriteCompare1(255); 
+        PWM_WriteCompare2(255); 
+        vTaskDelay(390);
+        MotorDirRight_Write(0);
+
+    }
+    
+    void oneHundreadTwentyDegreeTurnLeft(){
+        MotorDirLeft_Write(1);      // set LeftMotor backward mode
+        MotorDirRight_Write(0);     // set RightMotor forward mode
+        PWM_WriteCompare1(255); 
+        PWM_WriteCompare2(255); 
+        vTaskDelay(330);
+        MotorDirRight_Write(0);
+    }
+    
+    void backToMiddle(){  
+        motor_forward(0,0);
+        motor_backward(255,200);
+        motor_forward(255, 800);
+    }
+        // all  checks if the robot is on the black line.
+    
     bool objectAhead(){
     
     if(Ultra_GetDistance() <= 20){
@@ -320,44 +412,44 @@
     if(ref.r1 >= 10000 && ref.r2 >= 10000 && ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r3 >= 10000 ){
         return true;
     } return false;}
-    //bool bump(struct accData_data){
-    //}
-    bool isLineLittleLeft(struct sensors_ref){
+    
+    
+    bool isLineLittleLeft(struct sensors_ ref){
     
     if(ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
         return true;
     } return false;}
     
     
-    bool isLineLittleRight(struct sensors_ref){
+    bool isLineLittleRight(struct sensors_ ref){
     
     if(ref.l1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r1 >= 10000 && ref.r2 >= 10000 && ref.r3 >= 10000 ){
         return true;
     } return false;}
     
     
-    bool isLineLeft(struct sensors_ref){
+    bool isLineLeft(struct sensors_ ref){
     
-    if(ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
+    if(ref.l1 >= 10000 && ref.l2 >= 10000 && ref.l3 < 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
         return true;
     } return false;}
     
     
-    bool isLineRight(struct sensors_ref){
+    bool isLineRight(struct sensors_ ref){
     
     if(ref.l1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r1 >= 10000 && ref.r2 >= 10000 && ref.r3 < 10000 ){
         return true;
     } return false;}
     
     
-    bool isLineLeftEdge(struct sensors_ref){
+    bool isLineLeftEdge(struct sensors_ ref){
     
     if(ref.l1 >= 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r1 < 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
         return true;
     } return false;}
     
     
-    bool isLineRightEdge(struct sensors_ref){
+    bool isLineRightEdge(struct sensors_ ref){
     
     if(ref.l1 < 10000 && ref.l2 < 10000 && ref.l3 < 10000 && ref.r1 >= 10000 && ref.r2 < 10000 && ref.r3 < 10000 ){
         return true;
@@ -366,7 +458,7 @@
     
 #endif
 
-#if 1
+#if 0
     // Maze
     void zmain(void)
     {
@@ -1022,8 +1114,8 @@ void mazeTurnLeft(){
     
 #endif
 
-#if 0
-    // Linjan seuraus robotti
+#if 1
+    // Line following part
     void zmain(void)
     {
         // Initializing methods
@@ -1048,13 +1140,14 @@ void mazeTurnLeft(){
         void skip();
         void backToMiddleLineRight();
         void backToMiddleLineLeft();
-        int count = 0;
+        
         
         
 
         
         // Creating variables
         struct sensors_ ref;
+        int count = 0;
         uint8 SW1_Read(void);
         TickType_t start;
         TickType_t end;
@@ -1087,21 +1180,27 @@ void mazeTurnLeft(){
                     }
                 }
                 
+                // Main line following part
                 // Start of the line following
                 while(true){                    
                     reflectance_read(&ref);
                     printf(" _||_ %d, %d, %d, %d, %d, %d\n", ref.l3, ref.l2, ref.l1, ref.r1, ref.r2, ref.r3);
                     if(isLineIntersection(ref)){
+                        // Timing the stop on the third line
                         if(count>=10){
                             motor_forward(0,0);
                             motor_stop();
                             end = xTaskGetTickCount();
+                            
+                            // Calculating the time that it took to run the course
                             print_mqtt("Zumo045/stop","%d", end);
                             print_mqtt("Zumo045/time","%d", end-start);
                             break;
                         }else{
                             moveForward();
-                            count++;}                        
+                            count++;
+                        }
+                    // This is the line following algorith    
                     }else if(isLineMiddle(ref)){
                         moveForward();
                     }else if(isLineLittleRight(ref)){
@@ -1124,6 +1223,7 @@ void mazeTurnLeft(){
                 
                 }
                 
+                // Catching code here. So it dosen't give error
                 while(true){
                     vTaskDelay(100); // sleep (in an infinite loop)
                 }
@@ -1132,6 +1232,7 @@ void mazeTurnLeft(){
         }
     }
     
+//Takes sensor data as parameter. Check if the parameters indicates it being at middle. If middle returns true.    
 bool isLineMiddle(struct sensors_ ref){
 
     // Lisää lisä ehto jos vain jompi kumpi palaa 
@@ -1141,6 +1242,8 @@ bool isLineMiddle(struct sensors_ ref){
     
     return false;
 }
+
+//Takes sensor data as parameter. Check if the parameters indicates it being at right edge. If right edge returns true.
 bool isLineOnRightEdge(struct sensors_ ref){
 
     // Lisää lisä ehto jos vain jompi kumpi palaa 
@@ -1150,6 +1253,8 @@ bool isLineOnRightEdge(struct sensors_ ref){
     
     return false;
 }
+
+//Takes sensor data as parameter. Check if the parameters indicates it being at left edge. If left edge returns true.
 bool isLineOnLeftEdge(struct sensors_ ref){
 
     // Lisää lisä ehto jos vain jompi kumpi palaa 
@@ -1160,6 +1265,7 @@ bool isLineOnLeftEdge(struct sensors_ ref){
     return false;
 }
 
+//Takes sensor data as parameter. Check if the parameters indicates it being a intersection. If intersection returns true.
 bool isLineIntersection(struct sensors_ ref){
     
     int average = (ref.l1 + ref.l2 + ref.l3 + ref.r1 + ref.r2 + ref.r3) / 6;
@@ -1171,6 +1277,7 @@ bool isLineIntersection(struct sensors_ ref){
     return false;
 }
 
+//Takes sensor data as parameter. Check if the parameters indicates it being a little to right. If little right returns true.
 bool isLineLittleRight(struct sensors_ ref){
     
     // Lisää lisä ehto jos vain jompi kumpi palaa 
@@ -1181,6 +1288,7 @@ bool isLineLittleRight(struct sensors_ ref){
     return false;
 }
 
+//Takes sensor data as parameter. Check if the parameters indicates it being little left. If little left returns true.
 bool isLineLittleLeft(struct sensors_ ref){
     
     // Lisää lisä ehto jos vain jompi kumpi palaa 
@@ -1191,6 +1299,7 @@ bool isLineLittleLeft(struct sensors_ ref){
     return false;
 }
 
+//Takes sensor data as parameter. Check if the parameters indicates it being at rigt. If right returns true.
 bool isLineMoreRight(struct sensors_ ref){
     
     // Lisää lisä ehto jos vain jompi kumpi palaa 
@@ -1200,6 +1309,7 @@ bool isLineMoreRight(struct sensors_ ref){
     return false;
 }
 
+//Takes sensor data as parameter. Check if the parameters indicates it being at left. If left returns true.
 bool isLineMoreLeft(struct sensors_ ref){
     
     // Lisää lisä ehto jos vain jompi kumpi palaa 
@@ -1208,6 +1318,8 @@ bool isLineMoreLeft(struct sensors_ ref){
     }
     return false;
 }
+
+//Takes sensor data as parameter. Check if the parameters indicates it being at . If left returns true.
 bool endOfTheLineLeft(struct sensors_ ref){
 if(ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r3 < 10000 && ref.l1 >= 10000){
         return true;
@@ -1215,6 +1327,8 @@ if(ref.l2 >= 10000 && ref.l3 >= 10000 && ref.r3 < 10000 && ref.l1 >= 10000){
     return false;
 
 }
+
+//Takes sensor data as parameter. Check if the parameters indicates it being at . If left returns true.
 bool endOfTheLineRight(struct sensors_ ref){
     
     // Lisää lisä ehto jos vain jompi kumpi palaa 
@@ -1223,45 +1337,13 @@ bool endOfTheLineRight(struct sensors_ ref){
     }
     return false;
 }
-// bool isLineIntersectionCorner tarkoituksena on palata viivalle takaisin
 
-//void turnLeft(){
-//    motor_turn(30, 255, 0);
-//}
-//void hardTurnLeft(){
-//    motor_turn(0, 255, 0);
-//}
-//
-//void skip(){
-//    motor_forward(60, 200);
-//}
-//
-//void turnRight(){
-//    motor_turn(255, 30, 0);
-//}
-//void hardTurnRight(){
-//    motor_turn(255, 0, 0);
-//}
-//void backToMiddleLineRight(){
-//    motor_turn(255, 180, 0);
-//}
-//
-//void backToMiddleLineLeft(){
-//    motor_turn(180, 255, 0);
-//}
-//void moveForward(){
-//    motor_forward(255, 0);
-//}
-//
-//void stopMovement(){
-//    motor_forward(0, 0);
-//}
+// Here we have motor turns
 
-// 40, 255
 void turnLeft(){
     motor_turn(40, 200, 0);
 }
-// 0, 255
+
 void hardTurnLeft(){
     motor_turn(0, 255, 0);
 }
@@ -1270,15 +1352,15 @@ void skip(){
     motor_forward(80, 200);
 }
 
-//255, 40
+
 void turnRight(){
     motor_turn(200, 40, 0);
 }
-//255, 0
+
 void hardTurnRight(){
     motor_turn(255, 0, 0);
 }
-// 180, 120
+
 void backToMiddleLineRight(){
     motor_turn(180, 120, 0);
 }
@@ -1331,7 +1413,7 @@ void tankTurnRightExtreme(){
 }
 
 
-
+// Function for setting the real time
 void setRealTime(int hours, int minutes, int seconds){
 
     RTC_Start();
@@ -1348,6 +1430,7 @@ void setRealTime(int hours, int minutes, int seconds){
     
 }
 
+// Function for getting the real time. Houers and minutes
 void getRealTime(){
     RTC_TIME_DATE now;
     RTC_DisableInt();
@@ -1359,11 +1442,6 @@ void getRealTime(){
     
 }
 
-
-
-// some debug prints
-// printf(" _||_ %d", );
-    
 #endif
 
 #if 0
